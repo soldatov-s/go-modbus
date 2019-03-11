@@ -19,6 +19,12 @@ func (md *ModbusData) init() error {
 	return nil
 }
 
+func (md *ModbusData) SetHoldRegs(addr, cnt uint16, data []byte) error {
+	copy(md.holding_reg[addr*2:(addr+cnt)*2], data)
+
+	return nil
+}
+
 func (app *ModbusApp) ServerStart() error {
 	var (
 		md *ModbusData = &ModbusData{

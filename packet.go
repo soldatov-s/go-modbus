@@ -92,7 +92,7 @@ func (mp *ModbusPacket) PresetMultipleRegs(md *ModbusData) []byte {
 	cnt := binary.BigEndian.Uint16(mp.data[4:6])
 
 	// Set values in ModbusData
-	copy(md.holding_reg[addr*2:(addr+cnt)*2], mp.data[7:7+cnt*2])
+	md.SetHoldRegs(addr, cnt, mp.data[7:7+cnt*2])
 	length := uint16(mp.length) - cnt*2 - 1
 	answer := make([]byte, length)
 	// Copy addr and code function
