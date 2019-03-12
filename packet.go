@@ -99,6 +99,7 @@ func (mp *ModbusPacket) ReadHoldRegs(md *ModbusData) []byte {
 }
 
 func (mp *ModbusPacket) PresetMultipleRegs(md *ModbusData) []byte {
+	var answer []byte
 	addr := binary.BigEndian.Uint16(mp.data[2:4])
 	cnt := binary.BigEndian.Uint16(mp.data[4:6])
 
@@ -118,7 +119,7 @@ func (mp *ModbusPacket) ModbusDumper() {
 
 	fmt.Printf("Packet length: \t\t\t%d\n", mp.length)
 	fmt.Printf("Slave addr: \t\t\t%x\n", mp.GetAddr())
-	fmt.Printf("Code function: \t\t\t%s(0x%x)\n", mp.GetFC(), mp.GetFC())
+	fmt.Printf("Code function: \t\t\t%s(0x%x)\n", mp.GetFC(), byte(mp.GetFC()))
 	fmt.Printf("Packet data: \t\t\t%s", hex.Dump(mp.GetData()))
 	bs := make([]byte, 2)
 	binary.LittleEndian.PutUint16(bs, mp.GetCrc())
