@@ -9,6 +9,23 @@ const (
 	Unknown                            = -1
 )
 
+const (
+	ModbusRTUviaTCPMaxSize int = 256
+	ModbusTCPMaxSize       int = 260
+)
+
+func (p ModbusTypeProtocol) MaxSize() int {
+	names := []int{
+		ModbusTCPMaxSize,
+		ModbusRTUviaTCPMaxSize}
+
+	if p < ModbusTCP || p > ModbusRTUviaTCP {
+		return 0
+	}
+
+	return names[p]
+}
+
 func (p ModbusTypeProtocol) String() string {
 	names := []string{
 		"ModbusTCP",

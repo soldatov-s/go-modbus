@@ -59,9 +59,9 @@ func Crc16Check(data []byte, crc uint16) bool {
 	return Crc16(data) == crc
 }
 
-func AppendCrc16(data []byte) {
-	length := len(data)
+func AppendCrc16(data *[]byte) {
+	d := *data
 	bs := make([]byte, 2)
-	binary.LittleEndian.PutUint16(bs, Crc16(data[0:length-2]))
-	copy(data[length-2:length], bs)
+	binary.LittleEndian.PutUint16(bs, Crc16(d))
+	*data = append(d, bs...)
 }

@@ -25,6 +25,10 @@ func (md *ModbusData) SetHoldRegs(addr, cnt uint16, data []byte) error {
 	return nil
 }
 
+func (md *ModbusData) ReadHoldRegs(addr, cnt uint16) []byte {
+	return md.holding_reg[addr*2 : (addr+cnt)*2]
+}
+
 func (app *ModbusApp) ServerStart() error {
 	var (
 		md *ModbusData = &ModbusData{
@@ -93,7 +97,7 @@ func (app *ModbusApp) handleRequest(conn net.Conn, md *ModbusData) error {
 
 		if mp.length > 0 {
 			mp.ModbusDumper()
-			switch mp.fcode() {
+			switch mp.GetFC() {
 			case ReadHoldingRegisters:
 				answer = mp.ReadHoldRegs(md)
 			case PresetMultipleRegisters:
