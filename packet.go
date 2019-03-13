@@ -82,38 +82,6 @@ func (mp *ModbusPacket) ErrorHandler() {
 	copy(data, mp.data)
 }*/
 
-func (mp *ModbusPacket) ReadHoldRegs(md *ModbusData) []byte {
-	var answer []byte
-	addr := binary.BigEndian.Uint16(mp.data[2:4])
-	cnt := binary.BigEndian.Uint16(mp.data[4:6])
-
-	// Copy addr and code function
-	answer = append(answer, mp.GetPrefix()...)
-	// Answer length in byte
-	answer = append(answer, byte(cnt*2))
-	// Data for answer
-	answer = append(answer, md.ReadHoldRegs(addr, cnt)...)
-	// Crc Answer
-	AppendCrc16(&answer)
-	return answer
-}
-
-func (mp *ModbusPacket) PresetMultipleRegs(md *ModbusData) []byte {
-	var answer []byte
-	addr := binary.BigEndian.Uint16(mp.data[2:4])
-	cnt := binary.BigEndian.Uint16(mp.data[4:6])
-
-	// Set values in ModbusData
-	md.SetHoldRegs(addr, cnt, mp.data[7:7+cnt*2])
-	// Copy addr and code function
-	answer = append(answer, mp.GetPrefix()...)
-	//
-	answer = append(answer, mp.data[2:6]...)
-	// Crc Answer
-	AppendCrc16(&answer)
-	return answer
-}
-
 func (mp *ModbusPacket) ModbusDumper() {
 	fmt.Printf("\nDump Modbus Packet\n")
 
@@ -123,5 +91,5 @@ func (mp *ModbusPacket) ModbusDumper() {
 	fmt.Printf("Packet data: \t\t\t%s", hex.Dump(mp.GetData()))
 	bs := make([]byte, 2)
 	binary.LittleEndian.PutUint16(bs, mp.GetCrc())
-	fmt.Printf("Modbus CRC16: \t\t\t%s\n", hex.Dump(bs))
+	fmt.Printf("Modbus CRC16: \t\t\t%x %x\n\n", bs[0], bs[1])
 }
