@@ -2,40 +2,19 @@
 package main
 
 import (
-	"encoding/hex"
 	"fmt"
+	"math"
 	"net"
 )
-
-type ModbusData struct {
-	holding_reg_cnt, input_reg_cnt int
-	holding_reg, input_reg         []byte
-}
-
-func (md *ModbusData) init() error {
-	md.holding_reg = make([]byte, md.holding_reg_cnt*2)
-	md.input_reg = make([]byte, md.input_reg_cnt*2)
-
-	return nil
-}
-
-func (md *ModbusData) SetHoldRegs(addr, cnt uint16, data []byte) error {
-	copy(md.holding_reg[addr*2:(addr+cnt)*2], data)
-
-	return nil
-}
-
-func (md *ModbusData) ReadHoldRegs(addr, cnt uint16) []byte {
-	return md.holding_reg[addr*2 : (addr+cnt)*2]
-}
 
 func (app *ModbusApp) ServerStart() error {
 	var (
 		md *ModbusData = &ModbusData{
 			holding_reg_cnt: *holding_reg_cnt,
 			input_reg_cnt:   *input_reg_cnt}
-		ln  net.Listener
-		err error
+		ln   net.Listener
+		err  error
+		done = make(chan struct{})
 	)
 
 	fmt.Println("Server mode")
@@ -50,7 +29,10 @@ func (app *ModbusApp) ServerStart() error {
 		return err
 	}
 
-	defer ln.Close()
+	defer func() {
+		ln.Close()
+		close(done)
+	}()
 
 	for {
 		// Listen for an incoming connection.
@@ -65,13 +47,12 @@ func (app *ModbusApp) ServerStart() error {
 			conn.RemoteAddr().String(),
 			conn.LocalAddr().String())
 		// Handle connections in a new goroutine.
-		go app.handleRequest(conn, md)
+		go app.handleRequest(conn, md, done)
 	}
-
 }
 
 // Handles incoming requests.
-func (app *ModbusApp) handleRequest(conn net.Conn, md *ModbusData) error {
+func (app *ModbusApp) handleRequest(conn net.Conn, md *ModbusData, done <-chan struct{}) error {
 	var (
 		id_packet int
 		err       error
@@ -84,29 +65,38 @@ func (app *ModbusApp) handleRequest(conn net.Conn, md *ModbusData) error {
 
 	// Read the incoming connection into the buffer.
 	for {
-		mp.length, err = conn.Read(mp.data)
-		if err != nil {
-			fmt.Println("Error reading:", err.Error())
-			break
-		}
-		id_packet++
-		fmt.Println("Packet ID:", id_packet)
-		var (
-			answer []byte
-		)
-
-		if mp.length > 0 {
-			mp.ModbusDumper()
-			switch mp.GetFC() {
-			case ReadHoldingRegisters:
-				answer = mp.ReadHoldRegs(md)
-			case PresetMultipleRegisters:
-				answer = mp.PresetMultipleRegs(md)
-			default:
-
+		select {
+		case <-done:
+			conn.Close()
+			return nil
+		default:
+			mp.length, err = conn.Read(mp.data)
+			if err != nil {
+				fmt.Println("Error reading:", err.Error())
+				break
 			}
-			fmt.Println(hex.Dump(answer))
-			conn.Write(answer)
+			id_packet++
+			if id_packet == math.MaxInt32 {
+				id_packet = 0
+			}
+			fmt.Println("Packet ID:", id_packet)
+			var (
+				answer []byte
+			)
+
+			if mp.length > 0 {
+				mp.ModbusDumper()
+				switch mp.GetFC() {
+				case ReadHoldingRegisters:
+					answer = md.ReadHoldRegs(mp)
+				case PresetMultipleRegisters:
+					answer = md.PresetMultipleRegs(mp)
+				default:
+
+				}
+				// fmt.Println(hex.Dump(answer))
+				conn.Write(answer)
+			}
 		}
 	}
 	return err
