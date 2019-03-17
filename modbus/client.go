@@ -1,5 +1,5 @@
 // client
-package main
+package modbus
 
 /*func (mb *ModbusApp) read() ([]byte, int) {
 	// Make a buffer to hold incoming data.
@@ -39,4 +39,14 @@ func (mb *ModbusApp) sendAnswer(answer []byte) {
 	mb.write()
 	// Close the connection when you're done with it.
 	mb.conn.Close()
+}*/
+
+/*func (mp *ModbusPacket) HexStrToData(str string) {
+	data, err := hex.DecodeString(str)
+	if err != nil {
+		log.Fatal(err)
+	}
+	mp.data = make([]byte, 0, len(data))
+	mp.length = len(data)
+	copy(data, mp.data)
 }*/

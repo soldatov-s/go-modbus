@@ -1,5 +1,5 @@
 // packet
-package main
+package modbus
 
 import (
 	"encoding/binary"
@@ -18,15 +18,37 @@ func (mp *ModbusPacket) Init() {
 }
 
 func (mp *ModbusPacket) GetAddr() byte {
-	return mp.data[0]
+	if mp.mtp == ModbusRTUviaTCP {
+		return mp.data[0]
+	} else if mp.mtp == ModbusTCP {
+		return mp.data[5]
+	} else {
+		return 0
+	}
 }
 
 func (mp *ModbusPacket) GetFC() ModbusFunctionCode {
-	return ModbusFunctionCode(mp.data[1])
+	if mp.mtp == ModbusRTUviaTCP {
+		return ModbusFunctionCode(mp.data[1])
+	} else if mp.mtp == ModbusTCP {
+		return ModbusFunctionCode(mp.data[6])
+	} else {
+		return 0
+	}
+}
+
+func (mp *ModbusPacket) HandlerRequest(md *ModbusData) (*ModbusPacket, error) {
+	return mp.GetFC().Handler(mp, md)
 }
 
 func (mp *ModbusPacket) GetPrefix() []byte {
-	return mp.data[0:2]
+	if mp.mtp == ModbusRTUviaTCP {
+		return mp.data[0:2]
+	} else if mp.mtp == ModbusTCP {
+		return mp.data[5:7]
+	} else {
+		return []byte{0x0}
+	}
 }
 
 func (mp *ModbusPacket) GetData() []byte {
@@ -68,27 +90,14 @@ func (mp *ModbusPacket) Crc16Check() bool {
 	return res
 }
 
-func (mp *ModbusPacket) ErrorHandler() {
-
-}
-
-/*func (mp *ModbusPacket) HexStrToData(str string) {
-	data, err := hex.DecodeString(str)
-	if err != nil {
-		log.Fatal(err)
-	}
-	mp.data = make([]byte, 0, len(data))
-	mp.length = len(data)
-	copy(data, mp.data)
-}*/
-
-func (mp *ModbusPacket) ModbusDumper() {
+func (mp *ModbusPacket) ModbusDump() {
 	fmt.Printf("\nDump Modbus Packet\n")
 
 	fmt.Printf("Packet length: \t\t\t%d\n", mp.length)
 	fmt.Printf("Slave addr: \t\t\t%x\n", mp.GetAddr())
 	fmt.Printf("Code function: \t\t\t%s(0x%x)\n", mp.GetFC(), byte(mp.GetFC()))
-	fmt.Printf("Packet data: \t\t\t%s", hex.Dump(mp.GetData()))
+	fmt.Println("Packet data:")
+	fmt.Println(hex.Dump(mp.GetData()))
 	bs := make([]byte, 2)
 	binary.LittleEndian.PutUint16(bs, mp.GetCrc())
 	fmt.Printf("Modbus CRC16: \t\t\t%x %x\n\n", bs[0], bs[1])

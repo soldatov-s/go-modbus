@@ -1,12 +1,12 @@
 // protocols
-package main
+package modbus
 
 type ModbusTypeProtocol int
 
 const (
 	ModbusTCP       ModbusTypeProtocol = 0
 	ModbusRTUviaTCP ModbusTypeProtocol = 1
-	Unknown                            = -1
+	ModbusUnknown                      = -1
 )
 
 const (
@@ -39,11 +39,12 @@ func (p ModbusTypeProtocol) String() string {
 }
 
 func StringToModbusTypeProtocol(name string) ModbusTypeProtocol {
-	if name == "ModbusTCP" {
+	switch name {
+	case "ModbusTCP":
 		return ModbusTCP
-	} else if name == "ModbusRTUviaTCP" {
+	case "ModbusRTUviaTCP":
 		return ModbusRTUviaTCP
+	default:
+		return ModbusUnknown
 	}
-
-	return Unknown
 }

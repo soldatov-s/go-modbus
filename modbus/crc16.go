@@ -1,5 +1,5 @@
 // crc16
-package main
+package modbus
 
 import (
 	"encoding/binary"
