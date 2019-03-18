@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"math"
 	"net"
+	"sync"
 )
 
 type ModbusServer struct {
@@ -13,6 +14,8 @@ type ModbusServer struct {
 	Data                 *ModbusData
 	ln                   net.Listener
 	done                 chan struct{}
+	exited               chan struct{}
+	wg                   sync.WaitGroup
 }
 
 func NewServer(host, protocol, port string,
@@ -28,6 +31,7 @@ func NewServer(host, protocol, port string,
 	srv.Data = new(ModbusData)
 	srv.Data.Init(coils_cnt, discrete_inputs_cnt, holding_reg_cnt, input_reg_cnt)
 	srv.done = make(chan struct{})
+	srv.exited = make(chan struct{})
 
 	return srv
 }
@@ -36,18 +40,19 @@ func (srv *ModbusServer) String() string {
 	return srv.host + ":" + srv.port
 }
 
-func (srv *ModbusServer) ServerStop() error {
+func (srv *ModbusServer) Stop() error {
 	var err error
 
-	fmt.Println("Server stop")
+	fmt.Println("Shutting down server...")
 	close(srv.done)
+	<-srv.exited
 	return err
 }
 
-func (srv *ModbusServer) ServerStart() error {
+func (srv *ModbusServer) Start() error {
 	var err error
 
-	fmt.Println("Server start")
+	fmt.Println("Server startup...")
 	fmt.Println("Listening at", srv.String())
 
 	// Listen for incoming connections.
@@ -57,12 +62,13 @@ func (srv *ModbusServer) ServerStart() error {
 		return err
 	}
 
-	defer srv.ln.Close()
-
 	for {
 		select {
 		case <-srv.done:
 			fmt.Println("Stop listen incoming connection")
+			srv.ln.Close()
+			srv.wg.Wait()
+			close(srv.exited)
 			return nil
 		default:
 			// Listen for an incoming connection.
@@ -72,18 +78,17 @@ func (srv *ModbusServer) ServerStart() error {
 				conn.Close()
 				continue
 			}
-			fmt.Printf(
-				"Src->: \t\t\t\t%s\nDst<-: \t\t\t\t%s\n",
-				conn.RemoteAddr(),
-				conn.LocalAddr())
 			// Handle connections in a new goroutine.
-			go srv.handleRequest(conn, srv.done)
+			go srv.handleRequest(conn)
 		}
 	}
+
+	fmt.Println("Server is started")
+	return err
 }
 
 // Handles incoming requests.
-func (srv *ModbusServer) handleRequest(conn net.Conn, done <-chan struct{}) error {
+func (srv *ModbusServer) handleRequest(conn net.Conn) error {
 	var (
 		id_packet int
 		err       error
@@ -92,14 +97,20 @@ func (srv *ModbusServer) handleRequest(conn net.Conn, done <-chan struct{}) erro
 	)
 	// Close the connection when you're done with it.
 	defer conn.Close()
+	srv.wg.Add(1)
 	request.Init()
+
+	fmt.Printf(
+		"Src->: \t\t\t\t%s\nDst<-: \t\t\t\t%s\n",
+		conn.RemoteAddr(),
+		conn.LocalAddr())
 
 	// Read the incoming connection into the buffer.
 	for {
 		select {
-		case <-done:
+		case <-srv.done:
 			fmt.Println("Close connection", conn.RemoteAddr())
-			conn.Close()
+			srv.wg.Done()
 			return nil
 		default:
 			request.length, err = conn.Read(request.data)
