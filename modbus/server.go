@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"math"
 	"net"
+	"strings"
 	"sync"
 )
 
@@ -44,8 +45,10 @@ func (srv *ModbusServer) Stop() error {
 	var err error
 
 	fmt.Println("Shutting down server...")
+	srv.ln.Close()
 	close(srv.done)
-	<-srv.exited
+	srv.wg.Wait()
+	fmt.Println("Server is stopped")
 	return err
 }
 
@@ -61,27 +64,32 @@ func (srv *ModbusServer) Start() error {
 		fmt.Println("Error listening:", err.Error())
 		return err
 	}
-
-	for {
-		select {
-		case <-srv.done:
+	srv.wg.Add(1)
+	go func() {
+		defer func() {
 			fmt.Println("Stop listen incoming connection")
 			srv.ln.Close()
-			srv.wg.Wait()
-			close(srv.exited)
-			return nil
-		default:
-			// Listen for an incoming connection.
-			conn, err := srv.ln.Accept()
-			if err != nil {
-				fmt.Println("Error accepting: ", err.Error())
-				conn.Close()
-				continue
+			srv.wg.Done()
+		}()
+		for {
+			select {
+			case <-srv.done:
+				return
+			default:
+				// Listen for an incoming connection.
+				conn, err := srv.ln.Accept()
+				if err != nil {
+					if strings.Contains(err.Error(), "use of closed network connection") {
+						return
+					}
+					fmt.Println("Error accepting: ", err.Error())
+					continue
+				}
+				// Handle connections in a new goroutine.
+				go srv.handleRequest(conn)
 			}
-			// Handle connections in a new goroutine.
-			go srv.handleRequest(conn)
 		}
-	}
+	}()
 
 	fmt.Println("Server is started")
 	return err
@@ -127,14 +135,14 @@ func (srv *ModbusServer) handleRequest(conn net.Conn) error {
 			if id_packet == math.MaxInt32 {
 				id_packet = 0
 			}
-			fmt.Println("Packet ID:", id_packet)
+			fmt.Printf("Src->: \t\t\t\t%s, Packet ID:%d\n", conn.RemoteAddr(), id_packet)
 
 			// fmt.Println(hex.Dump(request.data))
-			request.ModbusDump()
+			//request.ModbusDump()
 			var answer *ModbusPacket
 			answer, err = request.HandlerRequest(srv.Data)
 
-			answer.ModbusDump()
+			//answer.ModbusDump()
 			conn.Write(answer.data)
 		}
 	}
