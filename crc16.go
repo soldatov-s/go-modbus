@@ -40,6 +40,7 @@ var CRCTable = []int{
 	0x8201, 0x42C0, 0x4380, 0x8341, 0x4100, 0x81C1, 0x8081, 0x4040,
 }
 
+// Count CRC16 for passed as parameters data
 func Crc16(data []byte) uint16 {
 	var (
 		b     byte
@@ -55,10 +56,12 @@ func Crc16(data []byte) uint16 {
 	return uint16(crc)
 }
 
+// Crc16Check verifies data CRC
 func Crc16Check(data []byte, crc uint16) bool {
 	return Crc16(data) == crc
 }
 
+// Appends CRC16 to passed data block
 func AppendCrc16(data *[]byte) {
 	d := *data
 	bs := make([]byte, 2)

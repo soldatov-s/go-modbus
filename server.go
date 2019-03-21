@@ -1,4 +1,11 @@
-// server
+// Copyright 2019 Sergey Soldatov. All rights reserved.
+// This software may be modified and distributed under the terms
+// of the Apache license. See the LICENSE file for details.
+
+/*
+Package modbus provides a server for MODBUS RTU over TCP.
+*/
+
 package modbus
 
 import (
@@ -7,8 +14,10 @@ import (
 	"net"
 	"strings"
 	"sync"
+	"time"
 )
 
+// ModbusServer implements server interface
 type ModbusServer struct {
 	host, protocol, port string
 	mbprotocol           ModbusTypeProtocol
@@ -19,6 +28,7 @@ type ModbusServer struct {
 	wg                   sync.WaitGroup
 }
 
+// NewServer function initializate new instance of ModbusServer
 func NewServer(host, protocol, port string,
 	mbprotocol ModbusTypeProtocol,
 	coils_cnt, discrete_inputs_cnt,
@@ -37,10 +47,12 @@ func NewServer(host, protocol, port string,
 	return srv
 }
 
+// Return string with host ip/name and port
 func (srv *ModbusServer) String() string {
 	return srv.host + ":" + srv.port
 }
 
+// Stop function close listener and wait closing all connection
 func (srv *ModbusServer) Stop() error {
 	var err error
 
@@ -52,6 +64,7 @@ func (srv *ModbusServer) Stop() error {
 	return err
 }
 
+// Start function begin listen incoming connection
 func (srv *ModbusServer) Start() error {
 	var err error
 
@@ -115,6 +128,7 @@ func (srv *ModbusServer) handleRequest(conn net.Conn) error {
 
 	// Read the incoming connection into the buffer.
 	for {
+		conn.SetReadDeadline(time.Now().Add(5 * time.Second))
 		select {
 		case <-srv.done:
 			fmt.Println("Close connection", conn.RemoteAddr())
