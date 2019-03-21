@@ -8,7 +8,7 @@ import (
 	"os/signal"
 	"syscall"
 
-	"github.com/soldatov-s/go-modbus/modbus"
+	"github.com/soldatov-s/go-modbus"
 )
 
 var (
