@@ -12,6 +12,7 @@ import (
 
 type ModbusDataType int
 
+// Data types enumeration
 const (
 	Coils ModbusDataType = iota
 	DiscreteInputs
@@ -19,6 +20,7 @@ const (
 	InputRegisters
 )
 
+// ModbusData implements data interface
 type ModbusData struct {
 	coils, discrete_inputs    []bool
 	holding_reg, input_reg    []uint16
@@ -44,6 +46,7 @@ func (md *ModbusData) checkOutside(dataType ModbusDataType, addr, cnt uint16) er
 	return err
 }
 
+// Initializate new instance of ModbusData
 func (md *ModbusData) Init(coils_cnt, discrete_inputs_cnt, holding_reg_cnt, input_reg_cnt int) error {
 	md.mu_holding_regs = &sync.Mutex{}
 	md.mu_coils = &sync.Mutex{}
@@ -55,6 +58,7 @@ func (md *ModbusData) Init(coils_cnt, discrete_inputs_cnt, holding_reg_cnt, inpu
 	return nil
 }
 
+// Set Preset Multiple Registers
 func (md *ModbusData) PresetMultipleRegisters(addr, cnt uint16, data []uint16) error {
 	err := md.checkOutside(HoldingRegisters, addr, cnt)
 	md.mu_holding_regs.Lock()
@@ -63,6 +67,7 @@ func (md *ModbusData) PresetMultipleRegisters(addr, cnt uint16, data []uint16) e
 	return err
 }
 
+// Read Holding Registers
 func (md *ModbusData) ReadHoldingRegisters(addr, cnt uint16) ([]uint16, error) {
 	err := md.checkOutside(HoldingRegisters, addr, cnt)
 	if err != nil {
@@ -71,6 +76,7 @@ func (md *ModbusData) ReadHoldingRegisters(addr, cnt uint16) ([]uint16, error) {
 	return md.holding_reg[addr : addr+cnt], err
 }
 
+// Read Input Registers
 func (md *ModbusData) ReadInputRegisters(addr, cnt uint16) ([]uint16, error) {
 	err := md.checkOutside(InputRegisters, addr, cnt)
 	if err != nil {
@@ -79,12 +85,14 @@ func (md *ModbusData) ReadInputRegisters(addr, cnt uint16) ([]uint16, error) {
 	return md.input_reg[addr : addr+cnt], err
 }
 
+// Read Coil Status
 func (md *ModbusData) ReadCoilStatus(addr, cnt uint16) ([]bool, error) {
 
 	err := md.checkOutside(Coils, addr, cnt)
 	return md.coils[addr : addr+cnt], err
 }
 
+// Force Multiple Coils
 func (md *ModbusData) ForceMultipleCoils(addr, cnt uint16, data []bool) error {
 	md.mu_coils.Lock()
 	defer md.mu_coils.Unlock()
@@ -93,6 +101,7 @@ func (md *ModbusData) ForceMultipleCoils(addr, cnt uint16, data []bool) error {
 	return err
 }
 
+// Read Descrete Inputs
 func (md *ModbusData) ReadDescreteInputs(addr, cnt uint16) ([]bool, error) {
 	err := md.checkOutside(DiscreteInputs, addr, cnt)
 	return md.coils[addr : addr+cnt], err

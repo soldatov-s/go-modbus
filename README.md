@@ -1,3 +1,4 @@
+[![GoDoc](https://godoc.org/github.com/golang/gddo?status.svg)](https://godoc.org/github.com/soldatov-s/go-modbus)
 # go-modbus
 Modbus protocol framework
 
