@@ -46,7 +46,7 @@ func (rest *ModbusRest) String() string {
 
 // Build a response to an unknown request
 func errAnswer(w http.ResponseWriter, r *http.Request) {
-	fmt.Fprintf(w, "GO AWAY", r.Method, r.URL.Path)
+	fmt.Fprintf(w, "%s; Method: %s; URL: %s", "GO AWAY", r.Method, r.URL.Path)
 }
 
 // Handler for GET/PUT request Coils
