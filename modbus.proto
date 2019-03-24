@@ -1,0 +1,17 @@
+//modbus.proto
+syntax = "proto3";
+
+package modbus; 
+
+service ModbusService {
+  rpc ReadHoldingRegisters(ModbusRequest) returns (RegisterResponse) {}
+}
+
+message ModbusRequest {
+  int32 addr = 1;
+  int32 cnt = 2;
+}
+
+message RegisterResponse {
+  repeated int32 data = 1;
+}
