@@ -12,11 +12,11 @@ import (
 )
 
 var (
-	protocol   = flag.String("protocol", "tcp", "type of protocol, tcp/udp")
-	port       = flag.String("port", "502", "port number")
-	host       = flag.String("host", "localhost", "hostname or host ip")
-	mbprotocol = flag.String("mbprotocol", "ModbusRTUviaTCP", "type of modbus protocol: ModbusTCP or ModbusRTUviaTCP")
-
+	port                = flag.String("port", "502", "port number")
+	host                = flag.String("host", "localhost", "hostname or host ip")
+	rest_port           = flag.String("rest_port", "8000", "port number")
+	rest_host           = flag.String("rest_host", "localhost", "hostname or host ip")
+	mbprotocol          = flag.String("mbprotocol", "ModbusRTUviaTCP", "type of modbus protocol: ModbusTCP or ModbusRTUviaTCP")
 	coils_cnt           = flag.Int("coils_cnt", 9999, "coils counter")
 	discrete_inputs_cnt = flag.Int("discrete_inputs_cnt", 9999, "discrete inputs counter")
 	holding_reg_cnt     = flag.Int("holding_reg_cnt", 9999, "holding register counter")
@@ -29,13 +29,14 @@ func main() {
 	fmt.Println("Modbus server app!")
 	flag.Parse()
 
-	srv := modbus.NewServer(
-		*host,
-		*protocol,
-		*port,
-		modbus.StringToModbusTypeProtocol(*mbprotocol),
-		*coils_cnt, *discrete_inputs_cnt, *holding_reg_cnt, *input_reg_cnt)
+	md := new(modbus.ModbusData)
+	md.Init(*coils_cnt, *discrete_inputs_cnt, *holding_reg_cnt, *input_reg_cnt)
+	md.PresetMultipleRegisters(0, []uint16{0x01, 0x02, 0x03, 0x04, 0x05})
 
+	srv := modbus.NewServer(*host, *port,
+		modbus.StringToModbusTypeProtocol(*mbprotocol), md)
+
+	rest := modbus.NewRest(*rest_host, *rest_port, md)
 	// Exit handler
 	exit := make(chan struct{})
 	closeSignal := make(chan os.Signal)
@@ -47,8 +48,12 @@ func main() {
 		close(exit)
 	}()
 
-	srv.Data.PresetMultipleRegisters(0, 5, []uint16{0x01, 0x02, 0x03, 0x04, 0x05})
 	err = srv.Start()
+	if err != nil {
+		fmt.Println(err)
+		os.Exit(1)
+	}
+	err = rest.Start()
 	if err != nil {
 		fmt.Println(err)
 		os.Exit(1)
