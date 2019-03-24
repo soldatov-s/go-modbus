@@ -1,5 +1,6 @@
 [![GoDoc](https://godoc.org/github.com/golang/gddo?status.svg)](https://godoc.org/github.com/soldatov-s/go-modbus)
 [![Build Status](https://travis-ci.org/soldatov-s/go-modbus.svg?branch=master)](https://travis-ci.org/soldatov-s/go-modbus)
+[![Coverage Status](http://codecov.io/github/soldatov-s/go-modbus/coverage.svg?branch=master)](http://codecov.io/github/soldatov-s/go-modbus?branch=master)
 [![License](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](https://opensource.org/licenses/Apache-2.0)
 # go-modbus
 
