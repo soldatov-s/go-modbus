@@ -1,4 +1,7 @@
-// crc16
+// Copyright 2019 Sergey Soldatov. All rights reserved.
+// This software may be modified and distributed under the terms
+// of the Apache license. See the LICENSE file for details.
+
 package modbus
 
 import (
@@ -38,7 +41,7 @@ var CRCTable = []int{
 	0x4E00, 0x8EC1, 0x8F81, 0x4F40, 0x8D01, 0x4DC0, 0x4C80, 0x8C41,
 	0x4400, 0x84C1, 0x8581, 0x4540, 0x8701, 0x47C0, 0x4680, 0x8641,
 	0x8201, 0x42C0, 0x4380, 0x8341, 0x4100, 0x81C1, 0x8081, 0x4040,
-}
+} // Table with predifined values for count CRC16 Modbus
 
 // Count CRC16 for passed as parameters data
 func Crc16(data []byte) uint16 {
