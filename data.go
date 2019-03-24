@@ -27,6 +27,7 @@ type ModbusData struct {
 	mu_holding_regs, mu_coils *sync.Mutex
 }
 
+// Checks that requested data is not outside the present range
 func (md *ModbusData) checkOutside(dataType ModbusDataType, addr, cnt uint16) error {
 	var (
 		err error
@@ -35,12 +36,19 @@ func (md *ModbusData) checkOutside(dataType ModbusDataType, addr, cnt uint16) er
 	switch dataType {
 	case HoldingRegisters:
 		l = uint16(len(md.holding_reg))
-		if addr > l || addr+cnt > l {
-			err_str := fmt.Sprintf("Requested data %d...%d outside the valid range 0...%d", addr, addr+cnt, l)
-			err = errors.New(err_str)
-		}
+	case DiscreteInputs:
+		l = uint16(len(md.discrete_inputs))
+	case InputRegisters:
+		l = uint16(len(md.input_reg))
+	case Coils:
+		l = uint16(len(md.coils))
 	default:
 		l = 0
+	}
+
+	if addr > l || addr+cnt > l {
+		err_str := fmt.Sprintf("Requested data %d...%d outside the valid range 0...%d", addr, addr+cnt, l)
+		err = errors.New(err_str)
 	}
 
 	return err
@@ -58,8 +66,19 @@ func (md *ModbusData) Init(coils_cnt, discrete_inputs_cnt, holding_reg_cnt, inpu
 	return nil
 }
 
+// Preset Single Register
+func (md *ModbusData) PresetSingleRegister(addr uint16, data uint16) error {
+	cnt := uint16(1)
+	err := md.checkOutside(HoldingRegisters, addr, cnt)
+	md.mu_holding_regs.Lock()
+	defer md.mu_holding_regs.Unlock()
+	md.holding_reg[addr] = data
+	return err
+}
+
 // Set Preset Multiple Registers
-func (md *ModbusData) PresetMultipleRegisters(addr, cnt uint16, data []uint16) error {
+func (md *ModbusData) PresetMultipleRegisters(addr uint16, data []uint16) error {
+	cnt := uint16(len(data))
 	err := md.checkOutside(HoldingRegisters, addr, cnt)
 	md.mu_holding_regs.Lock()
 	defer md.mu_holding_regs.Unlock()
@@ -92,11 +111,22 @@ func (md *ModbusData) ReadCoilStatus(addr, cnt uint16) ([]bool, error) {
 	return md.coils[addr : addr+cnt], err
 }
 
-// Force Multiple Coils
-func (md *ModbusData) ForceMultipleCoils(addr, cnt uint16, data []bool) error {
+// Force Single Coil
+func (md *ModbusData) ForceSingleCoil(addr uint16, data bool) error {
+	cnt := uint16(1)
+	err := md.checkOutside(Coils, addr, cnt)
 	md.mu_coils.Lock()
 	defer md.mu_coils.Unlock()
+	md.coils[addr] = data
+	return err
+}
+
+// Force Multiple Coils
+func (md *ModbusData) ForceMultipleCoils(addr uint16, data []bool) error {
+	cnt := uint16(len(data))
 	err := md.checkOutside(Coils, addr, cnt)
+	md.mu_coils.Lock()
+	defer md.mu_coils.Unlock()
 	copy(md.coils[addr:addr+cnt], data)
 	return err
 }

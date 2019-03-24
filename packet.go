@@ -10,78 +10,87 @@ import (
 	"fmt"
 )
 
+// ModbusPacket implements packet interface
 type ModbusPacket struct {
-	data   []byte
-	length int
-	mtp    ModbusTypeProtocol
+	Data   []byte             // Packet Data
+	Length int                // Length of Data
+	MTP    ModbusTypeProtocol // Type Modbus Protocol
 }
 
+// Init ModbusPacket
 func (mp *ModbusPacket) Init() {
-	mp.data = make([]byte, mp.mtp.MaxSize())
+	mp.Data = make([]byte, 0, mp.MTP.MaxSize())
 }
 
+// Get device address field from packet
 func (mp *ModbusPacket) GetAddr() byte {
-	if mp.mtp == ModbusRTUviaTCP {
-		return mp.data[0]
-	} else if mp.mtp == ModbusTCP {
-		return mp.data[5]
+	if mp.MTP == ModbusRTUviaTCP {
+		return mp.Data[0]
+	} else if mp.MTP == ModbusTCP {
+		return mp.Data[5]
 	} else {
 		return 0
 	}
 }
 
+// Get function code field from packet
 func (mp *ModbusPacket) GetFC() ModbusFunctionCode {
-	if mp.mtp == ModbusRTUviaTCP {
-		return ModbusFunctionCode(mp.data[1])
-	} else if mp.mtp == ModbusTCP {
-		return ModbusFunctionCode(mp.data[6])
+	if mp.MTP == ModbusRTUviaTCP {
+		return ModbusFunctionCode(mp.Data[1])
+	} else if mp.MTP == ModbusTCP {
+		return ModbusFunctionCode(mp.Data[6])
 	} else {
 		return 0
 	}
 }
 
+// Handler request by function code
 func (mp *ModbusPacket) HandlerRequest(md *ModbusData) (*ModbusPacket, error) {
 	return mp.GetFC().Handler(mp, md)
 }
 
+// Get prefix (device address & function code) from packet
 func (mp *ModbusPacket) GetPrefix() []byte {
-	if mp.mtp == ModbusRTUviaTCP {
-		return mp.data[0:2]
-	} else if mp.mtp == ModbusTCP {
-		return mp.data[5:7]
+	if mp.MTP == ModbusRTUviaTCP {
+		return mp.Data[0:2]
+	} else if mp.MTP == ModbusTCP {
+		return mp.Data[5:7]
 	} else {
 		return []byte{0x0}
 	}
 }
 
+// Get body Modbus request from packet
 func (mp *ModbusPacket) GetData() []byte {
-	if mp.length == 0 {
+	if mp.Length == 0 {
 		return nil
 	}
 
-	return mp.data[2 : mp.length-2]
+	return mp.Data[2 : mp.Length-2]
 }
 
+// Get CRC field from packet
 func (mp *ModbusPacket) GetCrc() uint16 {
-	if mp.length == 0 {
+	if mp.Length == 0 {
 		return 0
 	}
 
-	if mp.mtp == ModbusRTUviaTCP {
-		return binary.BigEndian.Uint16(mp.data[mp.length-2 : mp.length])
+	if mp.MTP == ModbusRTUviaTCP {
+		return binary.BigEndian.Uint16(mp.Data[mp.Length-2 : mp.Length])
 	} else {
 		return 0
 	}
 }
 
+// Recalculate and check CRC of packet
 func (mp *ModbusPacket) Crc16Check() bool {
-	if mp.length == 0 {
+	if mp.Length == 0 {
 		return false
 	}
 
 	res := true
-	if mp.mtp == ModbusRTUviaTCP {
-		res = Crc16Check(mp.data[:mp.length-2], mp.GetCrc())
+	if mp.MTP == ModbusRTUviaTCP {
+		res = Crc16Check(mp.Data[:mp.Length-2], mp.GetCrc())
 	}
 
 	if res {
@@ -93,10 +102,11 @@ func (mp *ModbusPacket) Crc16Check() bool {
 	return res
 }
 
+// Print Modbus Packet dump
 func (mp *ModbusPacket) ModbusDump() {
 	fmt.Printf("\nDump Modbus Packet\n")
 
-	fmt.Printf("Packet length: \t\t\t%d\n", mp.length)
+	fmt.Printf("Packet length: \t\t\t%d\n", mp.Length)
 	fmt.Printf("Slave addr: \t\t\t%x\n", mp.GetAddr())
 	fmt.Printf("Code function: \t\t\t%s(0x%x)\n", mp.GetFC(), byte(mp.GetFC()))
 	fmt.Println("Packet data:")

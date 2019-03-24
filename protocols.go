@@ -4,6 +4,9 @@
 
 package modbus
 
+// Type of Modbus Protocol:
+// - ModbusTCP
+// - ModbusRTUviaTCP
 type ModbusTypeProtocol int
 
 const (
@@ -17,6 +20,7 @@ const (
 	ModbusTCPMaxSize       int = 260
 )
 
+// Get MaxSize of packet for this protocol
 func (p ModbusTypeProtocol) MaxSize() int {
 	names := []int{
 		ModbusTCPMaxSize,
@@ -29,6 +33,7 @@ func (p ModbusTypeProtocol) MaxSize() int {
 	return names[p]
 }
 
+// Get the name of this protocol
 func (p ModbusTypeProtocol) String() string {
 	names := []string{
 		"ModbusTCP",
@@ -41,6 +46,7 @@ func (p ModbusTypeProtocol) String() string {
 	return names[p]
 }
 
+// Convert name protocol to type
 func StringToModbusTypeProtocol(name string) ModbusTypeProtocol {
 	switch name {
 	case "ModbusTCP":

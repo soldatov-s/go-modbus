@@ -2,9 +2,7 @@
 // This software may be modified and distributed under the terms
 // of the Apache license. See the LICENSE file for details.
 
-/*
-Package modbus provides a server for MODBUS RTU over TCP.
-*/
+// Package modbus provides a server for MODBUS RTU over TCP.
 
 package modbus
 
@@ -19,28 +17,20 @@ import (
 
 // ModbusServer implements server interface
 type ModbusServer struct {
-	host, protocol, port string
-	mbprotocol           ModbusTypeProtocol
-	Data                 *ModbusData
-	ln                   net.Listener
-	done                 chan struct{}
-	exited               chan struct{}
-	wg                   sync.WaitGroup
+	ModbusBase                    // Anonim ModbusBase implementation
+	MbProtocol ModbusTypeProtocol // Type of Modbus protocol: TCP or RTU over TCP
+	ln         net.Listener       // Listener
+	done       chan struct{}      // Chan for sending "done" command
+	exited     chan struct{}      // Chan for sending to main app signal that server is fully stopped
+	wg         sync.WaitGroup     // WaitGroup for waiting end all connection
 }
 
 // NewServer function initializate new instance of ModbusServer
-func NewServer(host, protocol, port string,
-	mbprotocol ModbusTypeProtocol,
-	coils_cnt, discrete_inputs_cnt,
-	holding_reg_cnt, input_reg_cnt int) *ModbusServer {
-
+func NewServer(host, port string, mbprotocol ModbusTypeProtocol, md *ModbusData) *ModbusServer {
 	srv := new(ModbusServer)
-	srv.host = host
-	srv.protocol = protocol
-	srv.port = port
-	srv.mbprotocol = mbprotocol
-	srv.Data = new(ModbusData)
-	srv.Data.Init(coils_cnt, discrete_inputs_cnt, holding_reg_cnt, input_reg_cnt)
+	srv.Host = host
+	srv.Port = port
+	srv.MbProtocol = mbprotocol
 	srv.done = make(chan struct{})
 	srv.exited = make(chan struct{})
 
@@ -49,7 +39,7 @@ func NewServer(host, protocol, port string,
 
 // Return string with host ip/name and port
 func (srv *ModbusServer) String() string {
-	return srv.host + ":" + srv.port
+	return srv.Host + ":" + srv.Port
 }
 
 // Stop function close listener and wait closing all connection
@@ -57,7 +47,9 @@ func (srv *ModbusServer) Stop() error {
 	var err error
 
 	fmt.Println("Shutting down server...")
-	srv.ln.Close()
+	if srv.ln != nil {
+		srv.ln.Close()
+	}
 	close(srv.done)
 	srv.wg.Wait()
 	fmt.Println("Server is stopped")
@@ -72,7 +64,7 @@ func (srv *ModbusServer) Start() error {
 	fmt.Println("Listening at", srv.String())
 
 	// Listen for incoming connections.
-	srv.ln, err = net.Listen(srv.protocol, srv.String())
+	srv.ln, err = net.Listen("tcp", srv.String())
 	if err != nil {
 		fmt.Println("Error listening:", err.Error())
 		return err
@@ -114,7 +106,7 @@ func (srv *ModbusServer) handleRequest(conn net.Conn) error {
 		id_packet int
 		err       error
 		request   *ModbusPacket = &ModbusPacket{
-			mtp: srv.mbprotocol}
+			MTP: srv.MbProtocol}
 	)
 	// Close the connection when you're done with it.
 	defer conn.Close()
@@ -135,13 +127,13 @@ func (srv *ModbusServer) handleRequest(conn net.Conn) error {
 			srv.wg.Done()
 			return nil
 		default:
-			request.length, err = conn.Read(request.data)
+			request.Length, err = conn.Read(request.Data)
 			if err != nil {
 				fmt.Println("Error reading:", err.Error())
 				break
 			}
 
-			if request.length == 0 {
+			if request.Length == 0 {
 				continue
 			}
 
@@ -157,7 +149,7 @@ func (srv *ModbusServer) handleRequest(conn net.Conn) error {
 			answer, err = request.HandlerRequest(srv.Data)
 
 			//answer.ModbusDump()
-			conn.Write(answer.data)
+			conn.Write(answer.Data)
 		}
 	}
 	return err
