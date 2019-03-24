@@ -19,7 +19,7 @@ Modbus protocol framework
  - Force Multiple Coils (0xF)
  - Preset Multiple Registers (0x10)
 
-## Instalation
+## Installation
 ```sh
 go get github.com/soldatov-s/go-modbus
 ```
