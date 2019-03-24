@@ -5,21 +5,15 @@
 package modbus
 
 import (
-	"fmt"
+	"log"
 	"net"
 )
 
 // ModbusClient implements client interface
 type ModbusClient struct {
-	Host string             // Host Name/IP
-	Port string             // Server port
+	ModbusBaseClient
 	MTP  ModbusTypeProtocol // Type Modbus Protocol
 	Conn net.Conn           // Connection
-}
-
-// Return string with host ip/name and port
-func (mc *ModbusClient) String() string {
-	return mc.Host + ":" + mc.Port
 }
 
 // NewClient function initializate new instance of ModbusClient
@@ -41,7 +35,7 @@ func (mc *ModbusClient) ReadAnswer() (*ModbusPacket, error) {
 	answer.MTP = mc.MTP
 	answer.Init()
 
-	fmt.Printf(
+	log.Printf(
 		"Src->: \t\t\t\t%s\nDst<-: \t\t\t\t%s\n",
 		mc.Conn.RemoteAddr(),
 		mc.Conn.LocalAddr())
@@ -49,7 +43,7 @@ func (mc *ModbusClient) ReadAnswer() (*ModbusPacket, error) {
 	// Read the incoming connection into the buffer.
 	_, err = mc.Conn.Read(answer.Data)
 	if err != nil {
-		fmt.Println("Error reading:", err.Error())
+		log.Println("Error reading:", err.Error())
 	}
 
 	return answer, err
@@ -62,10 +56,10 @@ func (mc *ModbusClient) SendRequest(mp *ModbusPacket) (*ModbusPacket, error) {
 		err    error
 	)
 
-	fmt.Println("Send request to", mc)
+	log.Println("Send request to", mc)
 	_, err = mc.Conn.Write(mp.Data)
 	if err != nil {
-		fmt.Println("Error connect:", err.Error())
+		log.Println("Error connect:", err.Error())
 		return nil, err
 	}
 

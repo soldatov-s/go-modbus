@@ -8,6 +8,7 @@ import (
 	"encoding/binary"
 	"encoding/hex"
 	"fmt"
+	"log"
 )
 
 // ModbusPacket implements packet interface
@@ -94,9 +95,9 @@ func (mp *ModbusPacket) Crc16Check() bool {
 	}
 
 	if res {
-		fmt.Println("CRC16 is OK")
+		log.Println("CRC16 is OK")
 	} else {
-		fmt.Println("CRC16 is FAIL")
+		log.Println("CRC16 is FAIL")
 	}
 
 	return res

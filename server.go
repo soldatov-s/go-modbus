@@ -7,7 +7,7 @@
 package modbus
 
 import (
-	"fmt"
+	"log"
 	"math"
 	"net"
 	"strings"
@@ -17,12 +17,12 @@ import (
 
 // ModbusServer implements server interface
 type ModbusServer struct {
-	ModbusBase                    // Anonim ModbusBase implementation
-	MTP ModbusTypeProtocol // Type of Modbus protocol: TCP or RTU over TCP
-	ln         net.Listener       // Listener
-	done       chan struct{}      // Chan for sending "done" command
-	exited     chan struct{}      // Chan for sending to main app signal that server is fully stopped
-	wg         sync.WaitGroup     // WaitGroup for waiting end all connection
+	ModbusBaseServer                    // Anonim ModbusBase implementation
+	MTP              ModbusTypeProtocol // Type of Modbus protocol: TCP or RTU over TCP
+	ln               net.Listener       // Listener
+	done             chan struct{}      // Chan for sending "done" command
+	exited           chan struct{}      // Chan for sending to main app signal that server is fully stopped
+	wg               sync.WaitGroup     // WaitGroup for waiting end all connection
 }
 
 // NewServer function initializate new instance of ModbusServer
@@ -37,22 +37,17 @@ func NewServer(host, port string, mbprotocol ModbusTypeProtocol, md *ModbusData)
 	return srv
 }
 
-// Return string with host ip/name and port
-func (srv *ModbusServer) String() string {
-	return srv.Host + ":" + srv.Port
-}
-
 // Stop function close listener and wait closing all connection
 func (srv *ModbusServer) Stop() error {
 	var err error
 
-	fmt.Println("Shutting down server...")
+	log.Println("Shutting down server...")
 	if srv.ln != nil {
 		srv.ln.Close()
 	}
 	close(srv.done)
 	srv.wg.Wait()
-	fmt.Println("Server is stopped")
+	log.Println("Server is stopped")
 	return err
 }
 
@@ -60,19 +55,19 @@ func (srv *ModbusServer) Stop() error {
 func (srv *ModbusServer) Start() error {
 	var err error
 
-	fmt.Println("Server startup...")
-	fmt.Println("Listening at", srv.String())
+	log.Println("Server startup...")
+	log.Println("Listening at", srv)
 
 	// Listen for incoming connections.
 	srv.ln, err = net.Listen("tcp", srv.String())
 	if err != nil {
-		fmt.Println("Error listening:", err.Error())
+		log.Println("Error listening:", err.Error())
 		return err
 	}
 	srv.wg.Add(1)
 	go func() {
 		defer func() {
-			fmt.Println("Stop listen incoming connection")
+			log.Println("Stop listen incoming connection")
 			srv.ln.Close()
 			srv.wg.Done()
 		}()
@@ -87,7 +82,7 @@ func (srv *ModbusServer) Start() error {
 					if strings.Contains(err.Error(), "use of closed network connection") {
 						return
 					}
-					fmt.Println("Error accepting: ", err.Error())
+					log.Println("Error accepting: ", err.Error())
 					continue
 				}
 				// Handle connections in a new goroutine.
@@ -96,7 +91,7 @@ func (srv *ModbusServer) Start() error {
 		}
 	}()
 
-	fmt.Println("Server is started")
+	log.Println("Server is started")
 	return err
 }
 
@@ -113,7 +108,7 @@ func (srv *ModbusServer) handleRequest(conn net.Conn) error {
 	srv.wg.Add(1)
 	request.Init()
 
-	fmt.Printf(
+	log.Printf(
 		"Src->: \t\t\t\t%s\nDst<-: \t\t\t\t%s\n",
 		conn.RemoteAddr(),
 		conn.LocalAddr())
@@ -123,13 +118,13 @@ func (srv *ModbusServer) handleRequest(conn net.Conn) error {
 		conn.SetReadDeadline(time.Now().Add(5 * time.Second))
 		select {
 		case <-srv.done:
-			fmt.Println("Close connection", conn.RemoteAddr())
+			log.Println("Close connection", conn.RemoteAddr())
 			srv.wg.Done()
 			return nil
 		default:
 			request.Length, err = conn.Read(request.Data)
 			if err != nil {
-				fmt.Println("Error reading:", err.Error())
+				log.Println("Error reading:", err.Error())
 				break
 			}
 
@@ -141,7 +136,7 @@ func (srv *ModbusServer) handleRequest(conn net.Conn) error {
 			if id_packet == math.MaxInt32 {
 				id_packet = 0
 			}
-			fmt.Printf("Src->: \t\t\t\t%s, Packet ID:%d\n", conn.RemoteAddr(), id_packet)
+			log.Printf("Src->: \t\t\t\t%s, Packet ID:%d\n", conn.RemoteAddr(), id_packet)
 
 			// fmt.Println(hex.Dump(request.data))
 			//request.ModbusDump()

@@ -10,18 +10,14 @@ import (
 
 	"golang.org/x/net/context"
 	"google.golang.org/grpc"
+
+	. "github.com/soldatov-s/go-modbus"
 )
 
 // ModbusClient implements client interface
 type ModbusgRPCClient struct {
-	Host string           // Host Name/IP
-	Port string           // Server port
+	ModbusBaseClient
 	Conn *grpc.ClientConn // Connection
-}
-
-// Return string with host ip/name and port
-func (c *ModbusgRPCClient) String() string {
-	return c.Host + ":" + c.Port
 }
 
 func NewgRPCClient(port, host string) *ModbusgRPCClient {

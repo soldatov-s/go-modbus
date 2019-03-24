@@ -4,11 +4,13 @@ package main
 import (
 	"flag"
 	"fmt"
+	"log"
 	"os"
 	"os/signal"
 	"syscall"
 
 	"github.com/soldatov-s/go-modbus"
+	"github.com/soldatov-s/go-modbus/modbusrest"
 )
 
 var (
@@ -26,7 +28,7 @@ var (
 func main() {
 	var err error
 
-	fmt.Println("Modbus server app!")
+	log.Println("Modbus server app!")
 	flag.Parse()
 
 	md := new(modbus.ModbusData)
@@ -36,7 +38,7 @@ func main() {
 	srv := modbus.NewServer(*host, *port,
 		modbus.StringToModbusTypeProtocol(*mbprotocol), md)
 
-	rest := modbus.NewRest(*rest_host, *rest_port, md)
+	rest := modbusrest.NewRest(*rest_host, *rest_port, md)
 	// Exit handler
 	exit := make(chan struct{})
 	closeSignal := make(chan os.Signal)
@@ -44,6 +46,7 @@ func main() {
 	go func() {
 		<-closeSignal
 		srv.Stop()
+		rest.Stop()
 		fmt.Println("Exit program")
 		close(exit)
 	}()

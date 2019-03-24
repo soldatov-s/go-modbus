@@ -9,19 +9,19 @@ import (
 	"testing"
 )
 
-type testpair struct {
+type testCrcPair struct {
 	data []byte
 	crc  uint16
 }
 
-var tests = []testpair{
+var testsCrc = []testCrcPair{
 	{[]byte{0x1, 0x2, 0x3, 0x4, 0x5}, 0xBB2A},
 	{[]byte{0x10, 0x20, 0x30, 0x40, 0x50}, 0xF0DF},
 	{nil, 0},
 }
 
 func TestCrc16(t *testing.T) {
-	for _, pair := range tests {
+	for _, pair := range testsCrc {
 		crc := Crc16(pair.data)
 		if crc != pair.crc {
 			t.Error(
@@ -34,8 +34,8 @@ func TestCrc16(t *testing.T) {
 	}
 }
 
-func ExampleCRC16() {
-	fmt.Printf("0x%X", Crc16([]byte{0x1, 0x2, 0x3, 0x4, 0x5}))
+func ExampleCrc16() {
+	log.Printf("0x%X", Crc16([]byte{0x1, 0x2, 0x3, 0x4, 0x5}))
 	// Output: 0xBB2A
 }
 

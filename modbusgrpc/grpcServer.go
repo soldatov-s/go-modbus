@@ -12,17 +12,14 @@ import (
 
 	"golang.org/x/net/context"
 	"google.golang.org/grpc/reflection"
+
+	. "github.com/soldatov-s/go-modbus"
 )
 
 // ModbusService is service for gRPC
 type ModbusService struct {
-	ModbusBase
+	ModbusBaseServer
 	ln net.Listener // Listener
-}
-
-// Return string with host ip/name and port
-func (s *ModbusService) String() string {
-	return s.Host + ":" + s.Port
 }
 
 // ReadHoldingRegisters handel request to gRPC server

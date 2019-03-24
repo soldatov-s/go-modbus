@@ -2,19 +2,25 @@
 // This software may be modified and distributed under the terms
 // of the Apache license. See the LICENSE file for details.
 
-package modbus
+package modbusrest
 
 import (
+	"context"
 	"encoding/json"
 	"fmt"
+	"log"
 	"net/http"
 	"strconv"
+	"time"
+
+	. "github.com/soldatov-s/go-modbus"
 )
 
 // ModbusServer implements server interface
 type ModbusRest struct {
-	ModbusBase                // Anonim ModbusBase implementation
-	Router     *http.ServeMux // HTTP request multiplexer
+	ModbusBaseServer                // Anonim ModbusBase implementation
+	Router           *http.ServeMux // HTTP request multiplexer
+	Server           *http.Server   // HTTP server
 }
 
 // Rest answer for Holding/Input registers request
@@ -37,11 +43,6 @@ type ModbusWriteRegReq struct {
 type ModbusWriteBoolReq struct {
 	Addr uint16 `json:"addr"` // Addres first element
 	Data []bool `json:"data"` // Values for writing
-}
-
-// Return string with host ip/name and port
-func (rest *ModbusRest) String() string {
-	return rest.Host + ":" + rest.Port
 }
 
 // Build a response to an unknown request
@@ -201,11 +202,26 @@ func NewRest(host, port string, md *ModbusData) *ModbusRest {
 // Start Rest-server for Modbus Data
 func (rest *ModbusRest) Start() error {
 	var err error
-	fmt.Println("Server startup...")
-	fmt.Println("Listening at", rest.String())
+	log.Println("REST-Server startup...")
+	log.Println("Listening at", rest.String())
 
+	rest.Server = &http.Server{Addr: rest.String(), Handler: rest.Router}
 	go func() {
-		err = http.ListenAndServe(rest.String(), rest.Router)
+		if err := rest.Server.ListenAndServe(); err != nil {
+			log.Fatalf("listenAndServe failed: %v", err)
+		}
 	}()
+	log.Println("REST-server started")
+
 	return err
+}
+
+func (rest *ModbusRest) Stop() {
+	// gracefully stop server
+	ctx, cancel := context.WithTimeout(context.Background(), 60*time.Second)
+	defer cancel()
+	if err := rest.Server.Shutdown(ctx); err != nil {
+		log.Fatal(err)
+	}
+	log.Println("server stopped")
 }

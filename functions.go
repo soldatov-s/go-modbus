@@ -7,7 +7,7 @@ package modbus
 import (
 	"encoding/binary"
 	"errors"
-	"fmt"
+	"log"
 )
 
 // Type of Modbus function
@@ -98,7 +98,7 @@ func ReadHoldingRegistersHndl(mp *ModbusPacket, md *ModbusData) (*ModbusPacket, 
 	// Data for answer
 	data, err := md.ReadHoldingRegisters(addr, cnt)
 	if err != nil {
-		fmt.Println(err)
+		log.Println(err)
 		return nil, err
 	}
 	answer.Data = append(answer.Data, wordArrToByteArr(data)...)
@@ -124,7 +124,7 @@ func ReadInputRegistersHndl(mp *ModbusPacket, md *ModbusData) (*ModbusPacket, er
 	// Data for answer
 	data, err := md.ReadInputRegisters(addr, cnt)
 	if err != nil {
-		fmt.Println(err)
+		log.Println(err)
 		return nil, err
 	}
 	answer.Data = append(answer.Data, wordArrToByteArr(data)...)
@@ -223,7 +223,7 @@ func ReadCoilStatusHndl(mp *ModbusPacket, md *ModbusData) (*ModbusPacket, error)
 	// Data for answer
 	data, err := md.ReadCoilStatus(addr, cnt)
 	if err != nil {
-		fmt.Println(err)
+		log.Println(err)
 		return nil, err
 	}
 	// Answer length in byte
@@ -250,7 +250,7 @@ func ReadDescreteInputsHndl(mp *ModbusPacket, md *ModbusData) (*ModbusPacket, er
 	// Data for answer
 	data, err := md.ReadDescreteInputs(addr, cnt)
 	if err != nil {
-		fmt.Println(err)
+		log.Println(err)
 		return nil, err
 	}
 	// Answer length in byte
