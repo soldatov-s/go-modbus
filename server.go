@@ -18,7 +18,7 @@ import (
 // ModbusServer implements server interface
 type ModbusServer struct {
 	ModbusBase                    // Anonim ModbusBase implementation
-	MbProtocol ModbusTypeProtocol // Type of Modbus protocol: TCP or RTU over TCP
+	MTP ModbusTypeProtocol // Type of Modbus protocol: TCP or RTU over TCP
 	ln         net.Listener       // Listener
 	done       chan struct{}      // Chan for sending "done" command
 	exited     chan struct{}      // Chan for sending to main app signal that server is fully stopped
@@ -30,7 +30,7 @@ func NewServer(host, port string, mbprotocol ModbusTypeProtocol, md *ModbusData)
 	srv := new(ModbusServer)
 	srv.Host = host
 	srv.Port = port
-	srv.MbProtocol = mbprotocol
+	srv.MTP = mbprotocol
 	srv.done = make(chan struct{})
 	srv.exited = make(chan struct{})
 
@@ -106,7 +106,7 @@ func (srv *ModbusServer) handleRequest(conn net.Conn) error {
 		id_packet int
 		err       error
 		request   *ModbusPacket = &ModbusPacket{
-			MTP: srv.MbProtocol}
+			MTP: srv.MTP}
 	)
 	// Close the connection when you're done with it.
 	defer conn.Close()

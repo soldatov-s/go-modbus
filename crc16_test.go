@@ -5,13 +5,44 @@
 package modbus
 
 import (
+	"fmt"
 	"testing"
 )
 
+type testpair struct {
+	data []byte
+	crc  uint16
+}
+
+var tests = []testpair{
+	{[]byte{0x1, 0x2, 0x3, 0x4, 0x5}, 0xBB2A},
+	{[]byte{0x10, 0x20, 0x30, 0x40, 0x50}, 0xF0DF},
+	{nil, 0},
+}
+
 func TestCrc16(t *testing.T) {
+	for _, pair := range tests {
+		crc := Crc16(pair.data)
+		if crc != pair.crc {
+			t.Error(
+				"For", pair.data,
+				"expected", pair.crc,
+				"got", crc,
+			)
+		}
+
+	}
+}
+
+func ExampleCRC16() {
+	fmt.Printf("0x%X", Crc16([]byte{0x1, 0x2, 0x3, 0x4, 0x5}))
+	// Output: 0xBB2A
+}
+
+func TestCrc16Check(t *testing.T) {
 	data := []byte{0x1, 0x2, 0x3, 0x4, 0x5}
-	crc := Crc16(data)
-	if crc != 0xBB2A {
-		t.Error("Expected BB2A, got ", crc)
+	r := Crc16Check(data, 0xBB2A)
+	if !r {
+		t.Error("Expected true, got ", r)
 	}
 }

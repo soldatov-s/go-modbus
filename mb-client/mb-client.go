@@ -1,9 +1,12 @@
-// test-client
+// Example of Modbus Master device (Client)
 package main
 
 import (
 	"flag"
 	"fmt"
+	"os"
+
+	"github.com/soldatov-s/go-modbus"
 )
 
 var (
@@ -18,5 +21,36 @@ var (
 )
 
 func main() {
-	fmt.Println("Hello World!")
+	var (
+		err    error
+		cl     *modbus.ModbusClient
+		answer *modbus.ModbusPacket
+	)
+	fmt.Println("Modbus client app!")
+	flag.Parse()
+
+	cl, err = modbus.NewClient(*host, *port,
+		modbus.StringToModbusTypeProtocol(*mbprotocol))
+
+	if err != nil {
+		fmt.Println(err)
+		os.Exit(1)
+	}
+
+	request := &modbus.ModbusPacket{
+		Data:   []byte{0x1, 0x3, 0x0, 0x0, 0x0, 0xA, 0xC5, 0xCD},
+		Length: 8,
+		MTP:    cl.MTP}
+
+	request.ModbusDump()
+
+	answer, err = cl.SendRequest(request)
+	if err != nil {
+		fmt.Println(err)
+		os.Exit(1)
+	}
+
+	answer.ModbusDump()
+
+	cl.Close()
 }

@@ -1,4 +1,4 @@
-// main
+// Example of Modbus Slave device (Server)
 package main
 
 import (

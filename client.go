@@ -4,45 +4,79 @@
 
 package modbus
 
-/*func (mb *ModbusApp) read() ([]byte, int) {
-	// Make a buffer to hold incoming data.
-	buf := make([]byte, 260)
+import (
+	"fmt"
+	"net"
+)
+
+// ModbusClient implements client interface
+type ModbusClient struct {
+	Host string             // Host Name/IP
+	Port string             // Server port
+	MTP  ModbusTypeProtocol // Type Modbus Protocol
+	Conn net.Conn           // Connection
+}
+
+// Return string with host ip/name and port
+func (mc *ModbusClient) String() string {
+	return mc.Host + ":" + mc.Port
+}
+
+// NewClient function initializate new instance of ModbusClient
+func NewClient(port, host string, mbprotocol ModbusTypeProtocol) (*ModbusClient, error) {
+	var err error
+	mc := new(ModbusClient)
+	mc.Host = host
+	mc.Port = port
+
+	mc.Conn, err = net.Dial("tcp", mc.String())
+
+	return mc, err
+}
+
+// Read Answer from Slave device (Server)
+func (mc *ModbusClient) ReadAnswer() (*ModbusPacket, error) {
+	var err error
+	answer := new(ModbusPacket)
+	answer.MTP = mc.MTP
+	answer.Init()
+
+	fmt.Printf(
+		"Src->: \t\t\t\t%s\nDst<-: \t\t\t\t%s\n",
+		mc.Conn.RemoteAddr(),
+		mc.Conn.LocalAddr())
+
 	// Read the incoming connection into the buffer.
-	reqLen, err := mb.conn.Read(buf)
+	_, err = mc.Conn.Read(answer.Data)
 	if err != nil {
 		fmt.Println("Error reading:", err.Error())
 	}
 
-	fmt.Printf("Src->: \t\t\t\t%s\n", mb.conn.RemoteAddr().String())
-	fmt.Printf("Dst<-: \t\t\t\t%s\n", mb.conn.LocalAddr().String())
-
-	return buf, reqLen
-}*/
-
-/*func (mb *ModbusApp) write() {
-	// Send a response back to person contacting us.
-	mb.conn.Write([]byte("Message received."))
+	return answer, err
 }
 
-func (mb *ModbusApp) sendAnswer(answer []byte) {
-	mb.conn.Write(answer)
-}*/
+// Send Request to Slave device (Server) and return Answer from it
+func (mc *ModbusClient) SendRequest(mp *ModbusPacket) (*ModbusPacket, error) {
+	var (
+		answer *ModbusPacket
+		err    error
+	)
 
-/*func (mb *ModbusApp) client() {
-	var err error
-
-	fmt.Println("Client mode")
-
-	mb.conn, err = net.Dial(mb.protocol, mb.address())
+	fmt.Println("Send request to", mc)
+	_, err = mc.Conn.Write(mp.Data)
 	if err != nil {
 		fmt.Println("Error connect:", err.Error())
-		os.Exit(1)
+		return nil, err
 	}
-	mb.read()
-	mb.write()
+
+	answer, err = mc.ReadAnswer()
+	return answer, err
+}
+
+func (mc *ModbusClient) Close() {
 	// Close the connection when you're done with it.
-	mb.conn.Close()
-}*/
+	mc.Conn.Close()
+}
 
 /*func (mp *ModbusPacket) HexStrToData(str string) {
 	data, err := hex.DecodeString(str)

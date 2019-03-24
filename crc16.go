@@ -45,6 +45,9 @@ var CRCTable = []int{
 
 // Count CRC16 for passed as parameters data
 func Crc16(data []byte) uint16 {
+	if data == nil {
+		return 0
+	}
 	var (
 		b     byte
 		nTemp byte
