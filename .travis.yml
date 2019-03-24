@@ -1,8 +1,5 @@
 language: go
 
-env:
-  CODECOV_TOKEN="f4abe318-f215-4480-9dd4-f4f4fb99e1f0"
-
 go:
   - 1.11.x
   - tip
