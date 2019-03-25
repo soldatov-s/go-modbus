@@ -31,6 +31,7 @@ func NewServer(host, port string, mbprotocol ModbusTypeProtocol, md *ModbusData)
 	srv.Host = host
 	srv.Port = port
 	srv.MTP = mbprotocol
+	srv.Data = md
 	srv.done = make(chan struct{})
 	srv.exited = make(chan struct{})
 
@@ -101,7 +102,7 @@ func (srv *ModbusServer) handleRequest(conn net.Conn) error {
 		id_packet int
 		err       error
 		request   *ModbusPacket = &ModbusPacket{
-			MTP: srv.MTP}
+			TypeProtocol: srv.MTP}
 	)
 	// Close the connection when you're done with it.
 	defer conn.Close()
@@ -109,7 +110,7 @@ func (srv *ModbusServer) handleRequest(conn net.Conn) error {
 	request.Init()
 
 	log.Printf(
-		"Src->: \t\t\t\t%s\nDst<-: \t\t\t\t%s\n",
+		"Src->: %s Dst<-: %s\n",
 		conn.RemoteAddr(),
 		conn.LocalAddr())
 
@@ -132,18 +133,18 @@ func (srv *ModbusServer) handleRequest(conn net.Conn) error {
 				continue
 			}
 
-			id_packet++
-			if id_packet == math.MaxInt32 {
+			if id_packet++; id_packet == math.MaxInt32 {
 				id_packet = 0
 			}
-			log.Printf("Src->: \t\t\t\t%s, Packet ID:%d\n", conn.RemoteAddr(), id_packet)
+			log.Printf("Src->: %s, Packet ID:%d\n", conn.RemoteAddr(), id_packet)
 
 			// fmt.Println(hex.Dump(request.data))
-			//request.ModbusDump()
+			log.Println("****Request Dump****")
+			request.ModbusDump()
 			var answer *ModbusPacket
 			answer, err = request.HandlerRequest(srv.Data)
-
-			//answer.ModbusDump()
+			log.Println("****Answer Dump****")
+			answer.ModbusDump()
 			conn.Write(answer.Data)
 		}
 	}

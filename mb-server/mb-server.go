@@ -39,27 +39,31 @@ func main() {
 		modbus.StringToModbusTypeProtocol(*mbprotocol), md)
 
 	rest := modbusrest.NewRest(*rest_host, *rest_port, md)
+
+	servers := [2]modbus.IModbusBaseServer{srv, rest}
 	// Exit handler
 	exit := make(chan struct{})
 	closeSignal := make(chan os.Signal)
 	signal.Notify(closeSignal, os.Interrupt, syscall.SIGTERM)
 	go func() {
 		<-closeSignal
-		srv.Stop()
-		rest.Stop()
+		for _, s := range servers {
+			err = s.Stop()
+			if err != nil {
+				fmt.Println(err)
+				os.Exit(1)
+			}
+		}
 		fmt.Println("Exit program")
 		close(exit)
 	}()
 
-	err = srv.Start()
-	if err != nil {
-		fmt.Println(err)
-		os.Exit(1)
-	}
-	err = rest.Start()
-	if err != nil {
-		fmt.Println(err)
-		os.Exit(1)
+	for _, s := range servers {
+		err = s.Start()
+		if err != nil {
+			fmt.Println(err)
+			os.Exit(1)
+		}
 	}
 
 	// Exit app if chan is closed

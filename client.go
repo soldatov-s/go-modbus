@@ -32,7 +32,7 @@ func NewClient(port, host string, mbprotocol ModbusTypeProtocol) (*ModbusClient,
 func (mc *ModbusClient) ReadAnswer() (*ModbusPacket, error) {
 	var err error
 	answer := new(ModbusPacket)
-	answer.MTP = mc.MTP
+	answer.TypeProtocol = mc.MTP
 	answer.Init()
 
 	log.Printf(

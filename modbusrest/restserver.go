@@ -216,12 +216,14 @@ func (rest *ModbusRest) Start() error {
 	return err
 }
 
-func (rest *ModbusRest) Stop() {
+func (rest *ModbusRest) Stop() error {
 	// gracefully stop server
 	ctx, cancel := context.WithTimeout(context.Background(), 60*time.Second)
 	defer cancel()
 	if err := rest.Server.Shutdown(ctx); err != nil {
-		log.Fatal(err)
+		log.Println(err)
+		return err
 	}
-	log.Println("server stopped")
+	log.Println("REST-server is stopped")
+	return nil
 }
