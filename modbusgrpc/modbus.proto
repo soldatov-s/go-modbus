@@ -1,7 +1,7 @@
 //modbus.proto
 syntax = "proto3";
 
-package modbus; 
+package modbusgrpc; 
 
 service ModbusService {
   rpc ReadHoldingRegisters(ModbusRequest) returns (RegisterResponse) {}
