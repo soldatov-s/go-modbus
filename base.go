@@ -15,6 +15,11 @@ type ModbusBaseServer struct {
 	Data *ModbusData // Modbus Data
 }
 
+type IModbusBaseServer interface {
+	Start() error
+	Stop() error
+}
+
 // Return string with host ip/name and port
 func (b *ModbusBaseServer) String() string {
 	return fmt.Sprintf("%s:%s", b.Host, b.Port)
