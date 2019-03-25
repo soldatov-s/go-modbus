@@ -72,6 +72,7 @@ func (fc ModbusFunctionCode) Handler(mp *ModbusPacket, md *ModbusData) (*ModbusP
 	}
 }
 
+// Error handler, builds ModbusPacket for error answer
 func errorHndl(mp *ModbusPacket, errCode byte) *ModbusPacket {
 	answer := new(ModbusPacket)
 	answer.TypeProtocol = mp.TypeProtocol
