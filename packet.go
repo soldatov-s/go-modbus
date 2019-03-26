@@ -12,9 +12,9 @@ import (
 
 // ModbusPacket implements packet interface
 type ModbusPacket struct {
-	Data   []byte             // Packet Data
-	Length int                // Length of Data
-	TypeProtocol    ModbusTypeProtocol // Type Modbus Protocol
+	Data         []byte             // Packet Data
+	Length       int                // Length of Data
+	TypeProtocol ModbusTypeProtocol // Type Modbus Protocol
 }
 
 // Init ModbusPacket
@@ -24,24 +24,24 @@ func (mp *ModbusPacket) Init() {
 
 // Get device address field from packet
 func (mp *ModbusPacket) GetAddr() byte {
-	switch  mp.TypeProtocol {
-		case ModbusRTUviaTCP:
+	switch mp.TypeProtocol {
+	case ModbusRTUviaTCP:
 		return mp.Data[0]
-		case ModbusTCP
+	case ModbusTCP:
 		return mp.Data[5]
-		default:
+	default:
 		return 0
 	}
 }
 
 // Get function code field from packet
 func (mp *ModbusPacket) GetFC() ModbusFunctionCode {
-	switch  mp.TypeProtocol {
-		case ModbusRTUviaTCP:
+	switch mp.TypeProtocol {
+	case ModbusRTUviaTCP:
 		return ModbusFunctionCode(mp.Data[1])
-		case ModbusTCP
+	case ModbusTCP:
 		return ModbusFunctionCode(mp.Data[6])
-		default:
+	default:
 		return 0
 	}
 }
@@ -53,12 +53,12 @@ func (mp *ModbusPacket) HandlerRequest(md *ModbusData) (*ModbusPacket, error) {
 
 // Get prefix (device address & function code) from packet
 func (mp *ModbusPacket) GetPrefix() []byte {
-	switch  mp.TypeProtocol {
-		case ModbusRTUviaTCP:
+	switch mp.TypeProtocol {
+	case ModbusRTUviaTCP:
 		return mp.Data[0:2]
-		case ModbusTCP
+	case ModbusTCP:
 		return mp.Data[5:7]
-		default:
+	default:
 		return []byte{0x0}
 	}
 }
@@ -81,7 +81,7 @@ func (mp *ModbusPacket) GetCrc() uint16 {
 
 // Recalculate and check CRC of packet
 func (mp *ModbusPacket) Crc16Check() bool {
-	if mp.Length == 0 || mp.GetCrc() == 0{
+	if mp.Length == 0 || mp.GetCrc() == 0 {
 		return false
 	}
 	return Crc16Check(mp.Data[:mp.Length-2], mp.GetCrc())
