@@ -72,18 +72,37 @@ func (fc ModbusFunctionCode) Handler(mp *ModbusPacket, md *ModbusData) (*ModbusP
 	}
 }
 
+func prepareAnswer(req *ModbusPacket, data_len int)*ModbusPacket {
+	answer := new(ModbusPacket)
+	answer.TypeProtocol = req.TypeProtocol
+	answer.Data = make([]byte, 0, data_len)
+	// Copy addr and code function
+	answer.Data = append(answer.Data, mp.GetPrefix()...)
+}
+
+func endAnswer(mp *ModbusPacket) {
+	// Crc Answer
+	AppendCrc16(&mp.Data)
+	mp.Length = len(mp.Data)
+}
+
+func buildAnswer(req *ModbusPacket, data_len int, data ...byte) *ModbusPacket {
+	// Init Answer Data
+	answer := prepareAnswer(mp, data_len)
+	// Answer length in byte
+	answer.Data = append(answer.Data, data...)
+	// End answer
+	endAnswer(answer)
+	
+	return answer
+}
+
 // Error handler, builds ModbusPacket for error answer
 func errorHndl(mp *ModbusPacket, errCode byte) *ModbusPacket {
-	answer := new(ModbusPacket)
-	answer.TypeProtocol = mp.TypeProtocol
-	// Init Answer Data
-	answer.Data = make([]byte, 0, 5)
-	answer.Data[0] = mp.GetAddr()
-	answer.Data[1] = mp.GetFC())|byte(0x80)
-	answer.Data[2] = errCode
-	// Crc Answer
-	AppendCrc16(&answer.Data)
-
+	answer := prepareAnswer(mp, 5)
+	answer.Data[2] = byte(mp.GetFC())|byte(0x80))
+	answer.Data = append(answer.Data, errCode)
+	endAnswer(answer)
 	return answer
 }
 
@@ -98,11 +117,9 @@ func wordArrToByteArr(data []uint16) []byte {
 
 // Read Holding registers
 func ReadHoldingRegistersHndl(mp *ModbusPacket, md *ModbusData) (*ModbusPacket, error) {
-	answer := new(ModbusPacket)
 	addr := binary.BigEndian.Uint16(mp.Data[2:4])
 	cnt := binary.BigEndian.Uint16(mp.Data[4:6])
 
-	answer.TypeProtocol = mp.TypeProtocol
 	// Try get data for answer
 	data, err := md.ReadHoldingRegisters(addr, cnt)
 	if err != nil {
@@ -110,24 +127,19 @@ func ReadHoldingRegistersHndl(mp *ModbusPacket, md *ModbusData) (*ModbusPacket, 
 		return errorHndl(mp, 2), err
 	}
 	// Init Answer Data
-	answer.Data = make([]byte, 0, 5+cnt*2)
-	// Copy addr and code function
-	answer.Data = append(answer.Data, mp.GetPrefix()...)
+	answer := prepareAnswer(mp, 5+cnt*2)
 	// Answer length in byte
 	answer.Data = append(answer.Data, byte(cnt*2))
 	// Data for answer
 	answer.Data = append(answer.Data, wordArrToByteArr(data)...)
-	// Crc Answer
-	AppendCrc16(&answer.Data)
-
-	answer.Length = len(answer.Data)
-
+	// End answer
+	endAnswer(answer)
+	
 	return answer, err
 }
 
 // Read Inputs registers
 func ReadInputRegistersHndl(mp *ModbusPacket, md *ModbusData) (*ModbusPacket, error) {
-	answer := new(ModbusPacket)
 	addr := binary.BigEndian.Uint16(mp.Data[2:4])
 	cnt := binary.BigEndian.Uint16(mp.Data[4:6])
 
@@ -137,44 +149,34 @@ func ReadInputRegistersHndl(mp *ModbusPacket, md *ModbusData) (*ModbusPacket, er
 		log.Println(err)
 		return errorHndl(mp, 2), err
 	}
-	answer.TypeProtocol = mp.TypeProtocol
 	// Init Answer Data
-	answer.Data = make([]byte, 0, 5+cnt*2)
-	// Copy addr and code function
-	answer.Data = append(answer.Data, mp.GetPrefix()...)
+	answer := prepareAnswer(mp, 5+cnt*2)
 	// Answer length in byte
 	answer.Data = append(answer.Data, byte(cnt*2))
 	// Data for answer
 	answer.Data = append(answer.Data, wordArrToByteArr(data)...)
-	// Crc Answer
-	AppendCrc16(&answer.Data)
-
-	answer.Length = len(answer.Data)
+	// End answer
+	endAnswer(answer)
 
 	return answer, err
 }
 
 // Preset Single Register
 func PresetSingleRegisterHndl(mp *ModbusPacket, md *ModbusData) (*ModbusPacket, error) {
-	answer := new(ModbusPacket)
 	addr := binary.BigEndian.Uint16(mp.Data[2:4])
 
 	answer.TypeProtocol = mp.TypeProtocol
-	// Init Answer Data
-	answer.Data = make([]byte, 0, 8)
 	// Set values in ModbusData
 	err := md.PresetSingleRegister(addr, binary.BigEndian.Uint16(mp.Data[4:6]))
 	if err != nil {
 		return errorHndl(mp, 2), err
 	}
-	// Copy addr and code function
-	answer.Data = append(answer.Data, mp.GetPrefix()...)
+	// Init Answer Data
+	answer := prepareAnswer(mp, 8)
 	// Copy body
-	answer.Data = append(answer.Data, mp.Data[2:6]...)
-	// Crc Answer
-	AppendCrc16(&answer.Data)
-
-	answer.Length = len(answer.Data)
+	answer.Data = append(answer.Data, mp.GetData()...)
+	// End answer
+	endAnswer(answer)
 
 	return answer, err
 }
@@ -190,26 +192,20 @@ func byteArrToWordArr(data []byte) []uint16 {
 
 // Preset Multiple Holding Registers
 func PresetMultipleRegistersHndl(mp *ModbusPacket, md *ModbusData) (*ModbusPacket, error) {
-	answer := new(ModbusPacket)
 	addr := binary.BigEndian.Uint16(mp.Data[2:4])
 	cnt := binary.BigEndian.Uint16(mp.Data[4:6])
 
-	answer.TypeProtocol = mp.TypeProtocol
-	// Init Answer Data
-	answer.Data = make([]byte, 0, 8)
 	// Set values in ModbusData
 	err := md.PresetMultipleRegisters(addr, byteArrToWordArr(mp.Data[7:7+cnt*2]))
 	if err != nil {
 		return errorHndl(mp, 2), err
 	}
-	// Copy addr and code function
-	answer.Data = append(answer.Data, mp.GetPrefix()...)
+	// Init Answer Data
+	answer := prepareAnswer(mp, 8)
 	// Copy body
-	answer.Data = append(answer.Data, mp.Data[2:6]...)
-	// Crc Answer
-	AppendCrc16(&answer.Data)
-
-	answer.Length = len(answer.Data)
+	answer.Data = append(answer.Data, mp.GetData()...)
+	// End answer
+	endAnswer(answer)
 
 	return answer, err
 }
@@ -236,66 +232,54 @@ func boolArrToByteArr(data []bool) []byte {
 
 // Read Coil Status
 func ReadCoilStatusHndl(mp *ModbusPacket, md *ModbusData) (*ModbusPacket, error) {
-	answer := new(ModbusPacket)
 	addr := binary.BigEndian.Uint16(mp.Data[2:4])
 	cnt := binary.BigEndian.Uint16(mp.Data[4:6])
 
-	answer.TypeProtocol = mp.TypeProtocol
-	// Init Answer Data
-	q, r := cnt/8, cnt%8
-	if r > 0 {
-		q++
-	}
-	answer.Data = make([]byte, 0, 5+q)
-	// Copy addr and code function
-	answer.Data = append(answer.Data, mp.GetPrefix()...)
 	// Data for answer
 	data, err := md.ReadCoilStatus(addr, cnt)
 	if err != nil {
 		log.Println(err)
 		return errorHndl(mp, 2), err
 	}
+	// Init Answer Data
+	q, r := cnt/8, cnt%8
+	if r > 0 {
+		q++
+	}
+	answer := prepareAnswer(mp, 5+q)
 	// Answer length in byte
-	answer.Data = append(answer.Data, byte(len(data)))
-
+	answer.Data = append(answer.Data, byte(q))
+	// Data for answer
 	answer.Data = append(answer.Data, boolArrToByteArr(data)...)
-	// Crc Answer
-	AppendCrc16(&answer.Data)
-
-	answer.Length = len(answer.Data)
+	// End answer
+	endAnswer(answer)
 
 	return answer, err
 }
 
 // Read Descrete Inputs
 func ReadDescreteInputsHndl(mp *ModbusPacket, md *ModbusData) (*ModbusPacket, error) {
-	answer := new(ModbusPacket)
 	addr := binary.BigEndian.Uint16(mp.Data[2:4])
 	cnt := binary.BigEndian.Uint16(mp.Data[4:6])
 
-	// Init Answer Data
-	q, r := cnt/8, cnt%8
-	if r > 0 {
-		q++
-	}
-	answer.Data = make([]byte, 0, 5+q)
-	answer.TypeProtocol = mp.TypeProtocol
-	// Copy addr and code function
-	answer.Data = append(answer.Data, mp.GetPrefix()...)
 	// Data for answer
 	data, err := md.ReadDescreteInputs(addr, cnt)
 	if err != nil {
 		log.Println(err)
 		return errorHndl(mp, 2), err
 	}
+	// Init Answer Data
+	q, r := cnt/8, cnt%8
+	if r > 0 {
+		q++
+	}
+	answer := prepareAnswer(mp, 5+q)
 	// Answer length in byte
-	answer.Data = append(answer.Data, byte(len(data)))
-
+	answer.Data = append(answer.Data, byte(q))
+	// Data for answer
 	answer.Data = append(answer.Data, boolArrToByteArr(data)...)
-	// Crc Answer
-	AppendCrc16(&answer.Data)
-
-	answer.Length = len(answer.Data)
+	// End answer
+	endAnswer(answer)
 
 	return answer, err
 }
@@ -303,12 +287,8 @@ func ReadDescreteInputsHndl(mp *ModbusPacket, md *ModbusData) (*ModbusPacket, er
 // Force Single Coil
 func ForceSingleCoilHndl(mp *ModbusPacket, md *ModbusData) (*ModbusPacket, error) {
 	var err error
-	answer := new(ModbusPacket)
 	addr := binary.BigEndian.Uint16(mp.Data[2:4])
 
-	answer.TypeProtocol = mp.TypeProtocol
-	// Init Answer Data
-	answer.Data = make([]byte, 0, 8)
 	// Set values in ModbusData
 	b := binary.BigEndian.Uint16(mp.Data[4:6])
 	if b == 0xFF00 {
@@ -320,32 +300,26 @@ func ForceSingleCoilHndl(mp *ModbusPacket, md *ModbusData) (*ModbusPacket, error
 	if err != nil {
 		return errorHndl(mp, 2), err
 	}
-
-	// Copy addr and code function
-	answer.Data = append(answer.Data, mp.GetPrefix()...)
+	// Init Answer Data
+	answer := prepareAnswer(mp, 8)
 	// Copy body
-	answer.Data = append(answer.Data, mp.Data[2:6]...)
-	// Crc Answer
-	AppendCrc16(&answer.Data)
-	answer.Length = len(answer.Data)
+	answer.Data = append(answer.Data, mp.mp.Data[2:6]...)
+	// End answer
+	endAnswer(answer)
 
 	return answer, err
 }
 
 // Convert byte array to bool array
 func byteArrToBoolArr(data []byte, cnt uint16) []bool {
-	var j uint16
-
 	bool_data := make([]bool, 0, cnt)
-
-	for i := 0; i < len(data); i++ {
+	j := 0
+	for i, value := range data {
 		for k := uint(0); k < 8; k++ {
-			if (data[i] & byte(1<<k)) != 0 {
-				bool_data = append(bool_data, true)
-			} else {
-				bool_data = append(bool_data, false)
+			bool_data = append(bool_data, bool(value & byte(1<<k)))
+			if j == cnt {
+				break
 			}
-
 			j++
 		}
 		if j == cnt {
@@ -357,26 +331,21 @@ func byteArrToBoolArr(data []byte, cnt uint16) []bool {
 
 // Force Multiple Coils
 func ForceMultipleCoilsHndl(mp *ModbusPacket, md *ModbusData) (*ModbusPacket, error) {
-	answer := new(ModbusPacket)
 	addr := binary.BigEndian.Uint16(mp.Data[2:4])
 	cnt := binary.BigEndian.Uint16(mp.Data[4:6])
 	cnt_byte := mp.Data[6]
 
-	answer.TypeProtocol = mp.TypeProtocol
-	// Init Answer Data
-	answer.Data = make([]byte, 0, 8)
 	// Set values in ModbusData
 	err := md.ForceMultipleCoils(addr, byteArrToBoolArr(mp.Data[8:8+cnt_byte*2], cnt))
 	if err != nil {
 		return errorHndl(mp, 2), err
 	}
-	// Copy addr and code function
-	answer.Data = append(answer.Data, mp.GetPrefix()...)
+	// Init Answer Data
+	answer := prepareAnswer(mp, 8)
 	// Copy body
 	answer.Data = append(answer.Data, mp.Data[2:6]...)
-	// Crc Answer
-	AppendCrc16(&answer.Data)
-	answer.Length = len(answer.Data)
+	// End answer
+	endAnswer(answer)
 
 	return answer, err
 }
