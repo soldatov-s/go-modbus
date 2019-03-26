@@ -36,18 +36,18 @@ func (md *ModbusData) checkOutside(dataType ModbusDataType, addr, cnt uint16) (b
 	res := true
 	switch dataType {
 	case HoldingRegisters:
-		l = uint16(len(md.holding_reg))
+		l = len(md.holding_reg)
 	case DiscreteInputs:
-		l = uint16(len(md.discrete_inputs))
+		l = len(md.discrete_inputs)
 	case InputRegisters:
-		l = uint16(len(md.input_reg))
+		l = len(md.input_reg)
 	case Coils:
-		l = uint16(len(md.coils))
+		l = len(md.coils)
 	default:
 		l = 0
 	}
 
-	if addr > l || addr+cnt > l {
+	if addr+cnt > uint16(l) {
 		err_str := fmt.Sprintf("Requested data %d...%d outside the valid range 0...%d", addr, addr+cnt, l)
 		err = errors.New(err_str)
 		res = false
