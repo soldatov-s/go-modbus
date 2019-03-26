@@ -9,12 +9,12 @@
 Modbus protocol framework
 
 ## Supported
- * Modbus RTU over TCP
- * Modbus Slave mode (Modbus Server)
- * Rest server for read/write Modbus Data
- * gRPC service
- * Dump Modbus packets
- * Function:  
+ 1. Modbus RTU over TCP
+ 2. Modbus Slave mode (Modbus Server)
+ 3. Rest server for read/write Modbus Data
+ 4. gRPC service
+ 5. Dump Modbus packets
+ 6. Function:  
  - Read Coil Status (0x1)
  - Read Discrete Inputs (0x2)
  - Read Holding Registers (0x3)
