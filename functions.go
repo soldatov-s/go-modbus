@@ -152,7 +152,6 @@ func ReadInputRegistersHndl(mp *ModbusPacket, md *ModbusData) (*ModbusPacket, er
 func PresetSingleRegisterHndl(mp *ModbusPacket, md *ModbusData) (*ModbusPacket, error) {
 	addr := binary.BigEndian.Uint16(mp.Data[2:4])
 
-	answer.TypeProtocol = mp.TypeProtocol
 	// Set values in ModbusData
 	err := md.PresetSingleRegister(addr, binary.BigEndian.Uint16(mp.Data[4:6]))
 	if err != nil {
