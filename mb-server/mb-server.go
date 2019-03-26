@@ -19,10 +19,10 @@ var (
 	rest_port           = flag.String("rest_port", "8000", "port number")
 	rest_host           = flag.String("rest_host", "localhost", "hostname or host ip")
 	mbprotocol          = flag.String("mbprotocol", "ModbusRTUviaTCP", "type of modbus protocol: ModbusTCP or ModbusRTUviaTCP")
-	coils_cnt           = flag.Int("coils_cnt", 9999, "coils counter")
-	discrete_inputs_cnt = flag.Int("discrete_inputs_cnt", 9999, "discrete inputs counter")
-	holding_reg_cnt     = flag.Int("holding_reg_cnt", 9999, "holding register counter")
-	input_reg_cnt       = flag.Int("input_reg_cnt", 9999, "input register counter")
+	coils_cnt           = flag.Int("coils_cnt", 65535, "coils counter")
+	discrete_inputs_cnt = flag.Int("discrete_inputs_cnt", 65535, "discrete inputs counter")
+	holding_reg_cnt     = flag.Int("holding_reg_cnt", 65535, "holding register counter")
+	input_reg_cnt       = flag.Int("input_reg_cnt", 65535, "input register counter")
 )
 
 func main() {
