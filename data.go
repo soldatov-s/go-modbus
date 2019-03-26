@@ -29,11 +29,8 @@ type ModbusData struct {
 
 // Checks that requested data is not outside the present range
 func (md *ModbusData) checkOutside(dataType ModbusDataType, addr, cnt uint16) (bool, error) {
-	var (
-		err error
-		l   uint16
-	)
-	res := true
+	var err error		
+	l := 0
 	switch dataType {
 	case HoldingRegisters:
 		l = len(md.holding_reg)
@@ -43,17 +40,15 @@ func (md *ModbusData) checkOutside(dataType ModbusDataType, addr, cnt uint16) (b
 		l = len(md.input_reg)
 	case Coils:
 		l = len(md.coils)
-	default:
-		l = 0
 	}
 
 	if addr+cnt > uint16(l) {
 		err_str := fmt.Sprintf("Requested data %d...%d outside the valid range 0...%d", addr, addr+cnt, l)
 		err = errors.New(err_str)
-		res = false
+		return true, err
 	}
 
-	return res, err
+	return true, nil
 }
 
 // Initializate new instance of ModbusData
