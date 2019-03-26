@@ -78,9 +78,9 @@ func errorHndl(mp *ModbusPacket, errCode byte) *ModbusPacket {
 	answer.TypeProtocol = mp.TypeProtocol
 	// Init Answer Data
 	answer.Data = make([]byte, 0, 5)
-	answer.Data = append(answer.Data, mp.GetAddr())
-	answer.Data = append(answer.Data, byte(mp.GetFC())|byte(0x80))
-	answer.Data = append(answer.Data, errCode)
+	answer.Data[0] = mp.GetAddr()
+	answer.Data[1] = mp.GetFC())|byte(0x80)
+	answer.Data[2] = errCode
 	// Crc Answer
 	AppendCrc16(&answer.Data)
 
@@ -89,13 +89,10 @@ func errorHndl(mp *ModbusPacket, errCode byte) *ModbusPacket {
 
 // Convert word array to byte array
 func wordArrToByteArr(data []uint16) []byte {
-	var byte_data []byte
-	for i := uint16(0); i < uint16(len(data)); i++ {
-		b := make([]byte, 2)
-		binary.BigEndian.PutUint16(b, data[i])
-		byte_data = append(byte_data, b...)
-	}
-
+	byte_data := make([]byte, 0, len(data)*2)
+	for i, value := range data {
+		binary.BigEndian.PutUint16(byte_data[i*2:(i+1)*2], value)
+        }
 	return byte_data
 }
 
@@ -228,22 +225,12 @@ func boolArrToByteArr(data []bool) []byte {
 
 	byte_data := make([]byte, 0, q)
 
-	for i := uint16(0); i < uint16(len(data)); i++ {
-		if data[i] {
-			b = b | 1<<j
+	for i, value := range data{
+		if value {
+			shift := uint(i) % 8
 		}
-		j++
-
-		if j == 7 {
-			byte_data = append(byte_data, b)
-			j = 0
-			b = 0
-		}
+		byte_data[i/8] |= byte(1 << shift)
 	}
-	if j < 7 {
-		byte_data = append(byte_data, b)
-	}
-
 	return byte_data
 }
 
