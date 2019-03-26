@@ -111,7 +111,7 @@ func errorHndl(mp *ModbusPacket, errCode byte) *ModbusPacket {
 
 // Convert word array to byte array
 func wordArrToByteArr(data []uint16) []byte {
-	byte_data := make([]byte, 0, len(data)*2)
+	byte_data := make([]byte, len(data)*2)
 	for i, value := range data {
 		binary.BigEndian.PutUint16(byte_data[i*2:(i+1)*2], value)
 	}
@@ -165,7 +165,7 @@ func PresetSingleRegisterHndl(mp *ModbusPacket, md *ModbusData) (*ModbusPacket, 
 
 // Convert byte array to word array
 func byteArrToWordArr(data []byte) []uint16 {
-	var reg_data []uint16
+	reg_data := make([]uint16, len(data)/2)
 	for i := uint16(0); i < uint16(len(data)/2); i++ {
 		reg_data = append(reg_data, binary.BigEndian.Uint16(data[2*i:2*i+2]))
 	}
@@ -194,7 +194,7 @@ func boolArrToByteArr(data []bool) []byte {
 		q++
 	}
 
-	byte_data := make([]byte, 0, q)
+	byte_data := make([]byte, q)
 	shift := 0
 	for i, value := range data {
 		if value {
@@ -267,7 +267,7 @@ func ForceSingleCoilHndl(mp *ModbusPacket, md *ModbusData) (*ModbusPacket, error
 
 // Convert byte array to bool array
 func byteArrToBoolArr(data []byte, cnt uint16) []bool {
-	bool_data := make([]bool, 0, cnt)
+	bool_data := make([]bool, cnt)
 	j := uint16(0)
 	for _, value := range data {
 		for k := uint(0); k < 8; k++ {
