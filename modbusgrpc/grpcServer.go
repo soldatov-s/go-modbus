@@ -39,6 +39,88 @@ func (s *ModbusService) ReadHoldingRegisters(ctx context.Context, req *ModbusReq
 	return &RegisterResponse{Data: answer_int32}, nil
 }
 
+// ReadInputRegisters handel request to gRPC server
+func (s *ModbusService) ReadInputRegisters(ctx context.Context, req *ModbusRequest) (*RegisterResponse, error) {
+
+	// Read input registers from ModbusData
+	answer, err := s.Data.ReadInputRegisters(uint16(req.Addr), uint16(req.Cnt))
+	if err != nil {
+		return nil, err
+	}
+
+	answer_int32 := make([]int32, 0, len(answer))
+	for _, a := range answer {
+		answer_int32 = append(answer_int32, int32(a))
+	}
+
+	return &RegisterResponse{Data: answer_int32}, nil
+}
+
+// ReadCoilStatus handel request to gRPC server
+func (s *ModbusService) ReadCoilStatus(ctx context.Context, req *ModbusRequest) (*BitResponse, error) {
+
+	// Read coils from ModbusData
+	answer, err := s.Data.ReadCoilStatus(uint16(req.Addr), uint16(req.Cnt))
+	if err != nil {
+		return nil, err
+	}
+
+	return &BitResponse{Data: answer}, nil
+}
+
+// ReadDescreteInputs handel request to gRPC server
+func (s *ModbusService) ReadDescreteInputs(ctx context.Context, req *ModbusRequest) (*BitResponse, error) {
+
+	// Read inputs from ModbusData
+	answer, err := s.Data.ReadDescreteInputs(uint16(req.Addr), uint16(req.Cnt))
+	if err != nil {
+		return nil, err
+	}
+
+	return &BitResponse{Data: answer}, nil
+}
+
+// PresetMultipleRegisters handel request to gRPC server
+func (s *ModbusService) PresetMultipleRegisters(ctx context.Context, req *ModbusWriteRegistersRequest) (*RegisterResponse, error) {
+
+	// Write holding registers to ModbusData
+	err := s.Data.PresetMultipleRegisters(uint16(req.Addr), uint16(req.Cnt))
+	if err != nil {
+		return nil, err
+	}
+	
+	// Read holding registers from ModbusData
+	answer, err := s.Data.ReadHoldingRegisters(uint16(req.Addr), uint16(req.Cnt))
+	if err != nil {
+		return nil, err
+	}
+
+	answer_int32 := make([]int32, 0, len(answer))
+	for _, a := range answer {
+		answer_int32 = append(answer_int32, int32(a))
+	}
+
+	return &RegisterResponse{Data: answer_int32}, nil
+}
+
+// ForceMultipleCoils handel request to gRPC server
+func (s *ModbusService) ForceMultipleCoils(ctx context.Context, req *ModbusWriteRegistersRequest) (*BitResponse, error) {
+
+	// Write coils to ModbusData
+	err := s.Data.ForceMultipleCoils(uint16(req.Addr), uint16(req.Cnt))
+	if err != nil {
+		return nil, err
+	}
+	
+	// Read coils from ModbusData
+	answer, err := s.Data.ReadCoilStatus(uint16(req.Addr), uint16(req.Cnt))
+	if err != nil {
+		return nil, err
+	}
+
+	return &BitResponse{Data: answer}, nil
+}
+
 func NewgRPCService(host, port string, md *ModbusData) *ModbusService {
 	srv := new(ModbusService)
 	srv.Data = md
