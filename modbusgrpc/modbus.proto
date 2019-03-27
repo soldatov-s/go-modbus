@@ -5,6 +5,11 @@ package modbusgrpc;
 
 service ModbusService {
   rpc ReadHoldingRegisters(ModbusRequest) returns (RegisterResponse) {}
+  rpc ReadInputRegisters(ModbusRequest) returns (RegisterResponse) {}
+  rpc ReadCoilStatus(ModbusRequest) returns (BitResponse) {}
+  rpc ReadDescreteInputs(ModbusRequest) returns (BitResponse) {}
+  rpc ForceMultipleCoils(ModbusWriteBitsRequest) returns (BitResponse) {}
+  rpc PresetMultipleRegisters(ModbusWriteRegistersRequest) returns (RegisterResponse) {}
 }
 
 message ModbusRequest {
@@ -12,6 +17,20 @@ message ModbusRequest {
   int32 cnt = 2;
 }
 
+message ModbusWriteBitsRequest {
+  int32 addr = 1;
+  repeated bool value = 2;
+}
+
+message ModbusWriteRegistersRequest {
+  int32 addr = 1;
+  repeated bool int32 = 2;
+}
+
 message RegisterResponse {
   repeated int32 data = 1;
+}
+
+message BitResponse {
+  repeated bool data = 1;
 }
