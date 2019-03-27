@@ -136,14 +136,14 @@ func buildPacket(TypeProtocol ModbusTypeProtocol, dev_id byte, fc ModbusFunction
 
 // Build answer for request
 func buildAnswer(req *ModbusPacket, fc ModbusFunctionCode, data ...byte) *ModbusPacket {
-	par1 := binary.BigEndian.Uint16(mp.Data[2:3])
-	par2 := binary.BigEndian.Uint16(mp.Data[4:6])
-	return buildPacket(req.TypeProtocol, req.GetAddr(), byte(mp.GetFC()), par1, par2, data...)
+	par1 := binary.BigEndian.Uint16(req.Data[2:3])
+	par2 := binary.BigEndian.Uint16(req.Data[4:6])
+	return buildPacket(req.TypeProtocol, req.GetAddr(), byte(req.GetFC()), par1, par2, data...)
 }
 
 // Error handler, builds ModbusPacket for error answer
-func buildErrAnswer(mp *ModbusPacket, errCode byte) *ModbusPacket {
-	return buildPacket(req.TypeProtocol, req.GetAddr(), byte(mp.GetFC()) | byte(0x80), errCode, 0)
+func buildErrAnswer(req *ModbusPacket, errCode byte) *ModbusPacket {
+	return buildPacket(req.TypeProtocol, req.GetAddr(), byte(req.GetFC()) | byte(0x80), errCode, 0)
 }
 
 // Convert word array to byte array
