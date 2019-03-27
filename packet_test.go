@@ -6,6 +6,7 @@ package modbus
 
 import (
 	"testing"
+	"fmt"
 )
 
 type testCrc16Checkpair struct {
@@ -15,7 +16,7 @@ type testCrc16Checkpair struct {
 }
 
 var testsCrc16Check = []testCrc16Checkpair{
-	{ModbusRTUviaTCP, []byte{0x1, 0x3, 0x0, 0x0, 0x0, 0xA, 0xC5, 0xCD}, true},
+	{ModbusRTUviaTCP, []byte{0x1, 0x3, 0x0, 0x0, 0x0, 0xA, 0xCD, 0xC5}, true},
 }
 
 func TestModbusPacket_Crc16Check(t *testing.T) {
@@ -26,6 +27,7 @@ func TestModbusPacket_Crc16Check(t *testing.T) {
 		mp.Init()
 		mp.Data = pair.data
 		mp.Length = len(pair.data)
+		fmt.Println(mp.GetCrc())
 		res := mp.Crc16Check()
 		if res != pair.res {
 			t.Error(
