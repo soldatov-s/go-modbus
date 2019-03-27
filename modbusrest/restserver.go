@@ -50,6 +50,20 @@ func errAnswer(w http.ResponseWriter, r *http.Request) {
 	fmt.Fprintf(w, "%s; Method: %s; URL: %s", "GO AWAY", r.Method, r.URL.Path)
 }
 
+func parseParam(r *http.Request) (uint16, uint16, error) {
+	query := r.URL.Query()
+	addr, err := strconv.Atoi(query.Get("addr"))
+	if err != nil {
+		return 0, 0, err
+	}
+	cnt, err := strconv.Atoi(query.Get("cnt"))
+	if err != nil {
+		return 0, 0, err
+	}
+
+	return uint16(addr), uint16(cnt), nil
+}
+
 // Handler for GET/PUT request Coils
 func (rest *ModbusRest) hndlCoils(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
@@ -57,8 +71,6 @@ func (rest *ModbusRest) hndlCoils(w http.ResponseWriter, r *http.Request) {
 	var (
 		answer ModbusBoolAnswer
 		err    error
-		addr   int
-		cnt    int
 	)
 
 	switch r.Method {
@@ -73,11 +85,9 @@ func (rest *ModbusRest) hndlCoils(w http.ResponseWriter, r *http.Request) {
 		}
 		json.NewEncoder(w).Encode(answer.Data)
 	case "GET":
-		query := r.URL.Query()
-		addr, err = strconv.Atoi(query.Get("addr"))
-		cnt, err = strconv.Atoi(query.Get("cnt"))
+		addr, cnt, err := parseParam(r)
 
-		answer.Data, err = rest.Data.ReadCoilStatus(uint16(addr), uint16(cnt))
+		answer.Data, err = rest.Data.ReadCoilStatus(addr, cnt)
 		if err != nil {
 			return
 		}
@@ -92,20 +102,13 @@ func (rest *ModbusRest) hndlCoils(w http.ResponseWriter, r *http.Request) {
 func (rest *ModbusRest) hndlDigitInputs(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
 
-	var (
-		answer ModbusBoolAnswer
-		err    error
-		addr   int
-		cnt    int
-	)
+	var answer ModbusBoolAnswer
 
 	switch r.Method {
 	case "GET":
-		query := r.URL.Query()
-		addr, err = strconv.Atoi(query.Get("addr"))
-		cnt, err = strconv.Atoi(query.Get("cnt"))
+		addr, cnt, err := parseParam(r)
 
-		answer.Data, err = rest.Data.ReadDescreteInputs(uint16(addr), uint16(cnt))
+		answer.Data, err = rest.Data.ReadDescreteInputs(addr, cnt)
 		if err != nil {
 			return
 		}
@@ -124,8 +127,6 @@ func (rest *ModbusRest) hndlHoldReg(w http.ResponseWriter, r *http.Request) {
 	var (
 		answer ModbusRegAnswer
 		err    error
-		addr   int
-		cnt    int
 	)
 
 	switch r.Method {
@@ -140,11 +141,8 @@ func (rest *ModbusRest) hndlHoldReg(w http.ResponseWriter, r *http.Request) {
 		}
 		json.NewEncoder(w).Encode(answer.Data)
 	case "GET":
-		query := r.URL.Query()
-		addr, err = strconv.Atoi(query.Get("addr"))
-		cnt, err = strconv.Atoi(query.Get("cnt"))
-
-		answer.Data, err = rest.Data.ReadHoldingRegisters(uint16(addr), uint16(cnt))
+		addr, cnt, err := parseParam(r)
+		answer.Data, err = rest.Data.ReadHoldingRegisters(addr, cnt)
 		if err != nil {
 			return
 		}
@@ -155,24 +153,16 @@ func (rest *ModbusRest) hndlHoldReg(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-// Handler for GE request Inputs Registers
+// Handler for GET request Inputs Registers
 func (rest *ModbusRest) hndlInputReg(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
 
-	var (
-		answer ModbusRegAnswer
-		err    error
-		addr   int
-		cnt    int
-	)
+	var answer ModbusRegAnswer
 
 	switch r.Method {
 	case "GET":
-		query := r.URL.Query()
-		addr, err = strconv.Atoi(query.Get("addr"))
-		cnt, err = strconv.Atoi(query.Get("cnt"))
-
-		answer.Data, err = rest.Data.ReadInputRegisters(uint16(addr), uint16(cnt))
+		addr, cnt, err := parseParam(r)
+		answer.Data, err = rest.Data.ReadInputRegisters(addr, cnt)
 		if err != nil {
 			return
 		}
