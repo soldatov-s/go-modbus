@@ -6,7 +6,6 @@ package modbus
 
 import (
 	"encoding/binary"
-	"fmt"
 )
 
 var CRCTable = []int{
