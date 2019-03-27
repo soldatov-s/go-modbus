@@ -13,8 +13,9 @@ import (
 // ModbusClient implements client interface
 type ModbusClient struct {
 	ModbusBaseClient
-	MTP  ModbusTypeProtocol // Type Modbus Protocol
-	Conn net.Conn           // Connection
+	DevID byte
+	MTP   ModbusTypeProtocol // Type Modbus Protocol
+	Conn  net.Conn           // Connection
 }
 
 // NewClient function initializate new instance of ModbusClient
@@ -37,7 +38,7 @@ func (mc *ModbusClient) ReadAnswer() (*ModbusPacket, error) {
 	answer.Init()
 
 	log.Printf(
-		"Src->: \t\t\t\t%s\nDst<-: \t\t\t\t%s\n",
+		"Src->: %s\ Dst<-: %s\n",
 		mc.Conn.RemoteAddr(),
 		mc.Conn.LocalAddr())
 
@@ -66,132 +67,53 @@ func (mc *ModbusClient) SendRequest(mp *ModbusPacket) (*ModbusPacket, error) {
 
 // Send Request ReadHoldingRegisters
 func (mc *ModbusClient) ReadHoldingRegisters(addr, cnt uint16) (*ModbusPacket, error) {
-	var answer, request *ModbusPacket
-
-	request.TypeProtocol = mc.MTP
-	request.Data = make([]byte, 0, 8)
-	// Copy addr and code function
-	request.Data = append(answer.Data, 0x1, byte(ReadHoldingRegisters))
-	binary.BigEndian.PutUint16(request.Data[2:4], addr)
-	binary.BigEndian.PutUint16(request.Data[4:6], cnt)
-	endAnswer(request)
-
+	request := buildPacket(mc.MTP, mc.DevID, ReadHoldingRegisters, addr, cnt)
 	return mc.SendRequest(request)
 }
 
 // Send Request ReadInputRegisters
 func (mc *ModbusClient) ReadInputRegisters(addr, cnt uint16) (*ModbusPacket, error) {
-	var answer, request *ModbusPacket
-
-	request.TypeProtocol = mc.MTP
-	request.Data = make([]byte, 0, 8)
-	// Copy addr and code function
-	request.Data = append(answer.Data, 0x1, byte(ReadInputRegisters))
-	binary.BigEndian.PutUint16(request.Data[2:4], addr)
-	binary.BigEndian.PutUint16(request.Data[4:6], cnt)
-	endAnswer(request)
-
+	request := buildPacket(mc.MTP, mc.DevID, ReadInputRegisters, addr, cnt)
 	return mc.SendRequest(request)
 }
 
 // Send Request PresetSingleRegister
 func (mc *ModbusClient) PresetSingleRegister(addr, value uint16) (*ModbusPacket, error) {
-	var answer, request *ModbusPacket
-
-	request.TypeProtocol = mc.MTP
-	request.Data = make([]byte, 0, 8)
-	// Copy addr and code function
-	request.Data = append(answer.Data, 0x1, byte(PresetSingleRegister))
-	binary.BigEndian.PutUint16(request.Data[2:4], addr)
-	binary.BigEndian.PutUint16(request.Data[4:6], value)
-	endAnswer(request)
-
+	request := buildPacket(mc.MTP, mc.DevID, ReadInputRegisters, addr, value)
 	return mc.SendRequest(request)
 }
 
 // Send Request ReadCoilStatus
 func (mc *ModbusClient) ReadCoilStatus(addr, cnt uint16) (*ModbusPacket, error) {
-	var answer, request *ModbusPacket
-
-	request.TypeProtocol = mc.MTP
-	request.Data = make([]byte, 0, 8)
-	// Copy addr and code function
-	request.Data = append(answer.Data, 0x1, byte(ReadCoilStatus))
-	binary.BigEndian.PutUint16(request.Data[2:4], addr)
-	binary.BigEndian.PutUint16(request.Data[4:6], cnt)
-	endAnswer(request)
-
+	request := buildPacket(mc.MTP, mc.DevID, ReadCoilStatus, addr, cnt)
 	return mc.SendRequest(request)
 }
 
 // Send Request ReadCoilStatus
 func (mc *ModbusClient) ReadDescreteInputs(addr, cnt uint16) (*ModbusPacket, error) {
-	var answer, request *ModbusPacket
-
-	request.TypeProtocol = mc.MTP
-	request.Data = make([]byte, 0, 8)
-	// Copy addr and code function
-	request.Data = append(answer.Data, 0x1, byte(ReadDescreteInputs))
-	binary.BigEndian.PutUint16(request.Data[2:4], addr)
-	binary.BigEndian.PutUint16(request.Data[4:6], cnt)
-	endAnswer(answer)
-
+	request := buildPacket(mc.MTP, mc.DevID, ReadDescreteInputs, addr, cnt)
 	return mc.SendRequest(request)
 }
 
 // Send Request ForceSingleCoil
 func (mc *ModbusClient) ForceSingleCoil(addr uint16, value bool) (*ModbusPacket, error) {
-	var answer, request *ModbusPacket
-	request.TypeProtocol = mc.MTP
-	request.Data = make([]byte, 0, 8)
-	// Copy addr and code function
-	request.Data = append(answer.Data, 0x1, byte(ForceSingleCoil))
-	binary.BigEndian.PutUint16(request.Data[2:4], addr)
+	v := uint16(0)
 	if value {
-		binary.BigEndian.PutUint16(request.Data[4:6], 0xFF00)
-	} else {
-		binary.BigEndian.PutUint16(request.Data[4:6], 0x0000)
+		v = 0xFF00
 	}
-	endAnswer(answer)
-
+	request := buildPacket(mc.MTP, mc.DevID, ForceSingleCoil, addr, v)
 	return mc.SendRequest(request)
 }
 
 // Send Request PresetMultipleRegisters
 func (mc *ModbusClient) PresetMultipleRegisters(addr, cnt uint16, data ...uint16) (*ModbusPacket, error) {
-	var answer, request *ModbusPacket
-
-	request.TypeProtocol = mc.MTP
-	request.Data = make([]byte, 0, 8+len(data)*2+1)
-	// Copy addr and code function
-	request.Data = append(answer.Data, 0x1, byte(PresetMultipleRegisters))
-	binary.BigEndian.PutUint16(request.Data[2:4], addr)
-	binary.BigEndian.PutUint16(request.Data[4:6], cnt)
-	request.Data = append(request.Data, byte(len(data)*2+1))
-	request.Data = append(request.Data, wordArrToByteArr(data)...)
-	endAnswer(answer)
-
+	request := buildPacket(mc.MTP, mc.DevID, PresetMultipleRegisters, addr, cnt, wordArrToByteArr(data)...)
 	return mc.SendRequest(request)
 }
 
 // Send Request ForceMultipleCoils
 func (mc *ModbusClient) ForceMultipleCoils(addr, cnt uint16, data ...bool) (*ModbusPacket, error) {
-	var answer, request *ModbusPacket
-
-	request.TypeProtocol = mc.MTP
-	q, r := len(data)/8, len(data)%8
-	if r > 0 {
-		q++
-	}
-	request.Data = make([]byte, 0, 8+q+1)
-	// Copy addr and code function
-	request.Data = append(answer.Data, 0x1, byte(ForceMultipleCoils))
-	binary.BigEndian.PutUint16(request.Data[2:4], addr)
-	binary.BigEndian.PutUint16(request.Data[4:6], cnt)
-	request.Data = append(request.Data, byte(len(data)*2+1))
-	request.Data = append(request.Data, boolArrToByteArr(data)...)
-	endAnswer(answer)
-
+	request := buildPacket(mc.MTP, mc.DevID, ForceMultipleCoils, addr, cnt, boolArrToByteArr(data)...)
 	return mc.SendRequest(request)
 }
 
