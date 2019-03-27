@@ -19,12 +19,12 @@ message ModbusRequest {
 
 message ModbusWriteBitsRequest {
   int32 addr = 1;
-  repeated bool value = 2;
+  repeated bool data = 2;
 }
 
 message ModbusWriteRegistersRequest {
   int32 addr = 1;
-  repeated bool int32 = 2;
+  repeated bool data = 2;
 }
 
 message RegisterResponse {
