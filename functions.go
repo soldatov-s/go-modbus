@@ -83,14 +83,18 @@ func buildPacket(TypeProtocol ModbusTypeProtocol, dev_id byte, fc ModbusFunction
 	// ReadRegs/ReadIns - 2 + 2; Answer - 1 + data_len
 	// WriteRegs/WriteOuts - 2 + 2 + 1 + data_len; Answer - 2 + 2
 	// WriteReg/WriteOut - 2 + 2; Answer - 2 + 2
+	
+	// FC with parameters length
 	switch fc {
 	case ReadCoilStatus, ReadDescreteInputs, ReadHoldingRegistersHndl:
+		// data == nill is a request
 		if data == nill {
 			mp.Length += 4
 		} else {
 			mp.Length += 1
 		}
 	case ForceMultipleCoils, PresetMultipleRegisters:
+		// data != nill is a request
 		if data != nill {
 			mp.Length += 5
 		} else {
@@ -107,7 +111,16 @@ func buildPacket(TypeProtocol ModbusTypeProtocol, dev_id byte, fc ModbusFunction
 	if mp.Length == 0 {
 		return nil
 	}
-	mp.Length += len(data)
+	// Data length
+	if (fc == ReadCoilStatus || fc == ReadDescreteInputs) && data == nill {
+		q, r := par2/8, par2%8
+		if r > 0 {
+			q++
+		}
+		mp.Length += q
+	} else {
+		mp.Length += len(data)
+	}
 	mp.Data = make([]byte, 2, mp.Length)
 	mp.Data[0] = dev_id
 	mp.Data[1] = byte(fc)
@@ -233,11 +246,6 @@ func ReadCoilStatusHndl(mp *ModbusPacket, md *ModbusData) (*ModbusPacket, error)
 		log.Println(err)
 		return buildErrAnswer(mp, 2), err
 	}
-	// Init Answer Data
-	q, r := cnt/8, cnt%8
-	if r > 0 {
-		q++
-	}
 	return buildAnswer(mp, ReadCoilStatus, boolArrToByteArr(data)...), nil
 }
 
@@ -251,11 +259,6 @@ func ReadDescreteInputsHndl(mp *ModbusPacket, md *ModbusData) (*ModbusPacket, er
 	if err != nil {
 		log.Println(err)
 		return buildErrAnswer(mp, 2), err
-	}
-	// Init Answer Data
-	q, r := cnt/8, cnt%8
-	if r > 0 {
-		q++
 	}
 	return buildAnswer(mp, ReadDescreteInputs, boolArrToByteArr(data)...), nil
 }
