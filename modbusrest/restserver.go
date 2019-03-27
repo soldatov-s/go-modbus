@@ -69,8 +69,9 @@ func (rest *ModbusRest) hndlCoils(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
 
 	var (
-		answer ModbusBoolAnswer
-		err    error
+		answer    ModbusBoolAnswer
+		err       error
+		addr, cnt uint16
 	)
 
 	switch r.Method {
@@ -78,24 +79,21 @@ func (rest *ModbusRest) hndlCoils(w http.ResponseWriter, r *http.Request) {
 		var req ModbusWriteBoolReq
 		_ = json.NewDecoder(r.Body).Decode(&req)
 		rest.Data.ForceMultipleCoils(req.Addr, req.Data)
-
 		answer.Data, err = rest.Data.ReadCoilStatus(req.Addr, uint16(len(req.Data)))
-		if err != nil {
-			return
-		}
-		json.NewEncoder(w).Encode(answer.Data)
 	case "GET":
-		addr, cnt, err := parseParam(r)
-
-		answer.Data, err = rest.Data.ReadCoilStatus(addr, cnt)
+		addr, cnt, err = parseParam(r)
 		if err != nil {
 			return
 		}
-		json.NewEncoder(w).Encode(answer.Data)
-
+		answer.Data, err = rest.Data.ReadCoilStatus(addr, cnt)
 	default:
 		errAnswer(w, r)
+		return
 	}
+	if err != nil {
+		return
+	}
+	json.NewEncoder(w).Encode(answer.Data)
 }
 
 // Handler for GET request DigitInputs
@@ -107,7 +105,6 @@ func (rest *ModbusRest) hndlDigitInputs(w http.ResponseWriter, r *http.Request) 
 	switch r.Method {
 	case "GET":
 		addr, cnt, err := parseParam(r)
-
 		answer.Data, err = rest.Data.ReadDescreteInputs(addr, cnt)
 		if err != nil {
 			return
@@ -117,7 +114,6 @@ func (rest *ModbusRest) hndlDigitInputs(w http.ResponseWriter, r *http.Request) 
 	default:
 		errAnswer(w, r)
 	}
-
 }
 
 // Handler for GET/PUT request Holding Registers
@@ -125,8 +121,9 @@ func (rest *ModbusRest) hndlHoldReg(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
 
 	var (
-		answer ModbusRegAnswer
-		err    error
+		answer    ModbusRegAnswer
+		err       error
+		addr, cnt uint16
 	)
 
 	switch r.Method {
@@ -136,21 +133,20 @@ func (rest *ModbusRest) hndlHoldReg(w http.ResponseWriter, r *http.Request) {
 		rest.Data.PresetMultipleRegisters(req.Addr, req.Data)
 
 		answer.Data, err = rest.Data.ReadHoldingRegisters(req.Addr, uint16(len(req.Data)))
-		if err != nil {
-			return
-		}
-		json.NewEncoder(w).Encode(answer.Data)
 	case "GET":
-		addr, cnt, err := parseParam(r)
-		answer.Data, err = rest.Data.ReadHoldingRegisters(addr, cnt)
+		addr, cnt, err = parseParam(r)
 		if err != nil {
 			return
 		}
-		json.NewEncoder(w).Encode(answer.Data)
-
+		answer.Data, err = rest.Data.ReadHoldingRegisters(addr, cnt)
 	default:
 		errAnswer(w, r)
+		return
 	}
+	if err != nil {
+		return
+	}
+	json.NewEncoder(w).Encode(answer.Data)
 }
 
 // Handler for GET request Inputs Registers
