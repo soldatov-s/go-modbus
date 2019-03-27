@@ -60,7 +60,7 @@ func Crc16(data []byte) uint16 {
 		crc >>= 8
 		crc ^= CRCTable[nTemp]
 	}
-	rmt.Println(crc)
+	fmt.Println(crc)
 	return uint16(crc)
 }
 
