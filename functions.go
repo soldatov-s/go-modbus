@@ -81,12 +81,22 @@ func prepareAnswer(req *ModbusPacket, data_len byte) *ModbusPacket {
 	return answer
 }
 
-func endAnswer(mp *ModbusPacket) {
+func endPacket(mp *ModbusPacket) {
 	// Crc Answer
 	AppendCrc16(&mp.Data)
 	mp.Length = len(mp.Data)
 }
 
+// Build ModbusPacket
+func buildPacket(TypeProtocol ModbusTypeProtocol, dev_id byte, fc ModbusFunctionCode, pref_len byte, data_len byte, data ...byte) *ModbusPacket {
+	mp := new(ModbusPacket)
+	mp.TypeProtocol = TypeProtocol
+	answer.Data = make([]byte, 0, pref_len+data_len)
+	answer.Data = append(answer.Data, dev_id, byte(ModbusFunctionCode), data)
+	endPacket(mp)
+}
+
+// Build answer for request
 func buildAnswer(req *ModbusPacket, pref_len byte, data_len byte, data ...byte) *ModbusPacket {
 	// Init Answer Data
 	answer := prepareAnswer(req, pref_len+data_len)
@@ -95,7 +105,7 @@ func buildAnswer(req *ModbusPacket, pref_len byte, data_len byte, data ...byte) 
 	}
 	answer.Data = append(answer.Data, data...)
 	// End answer
-	endAnswer(answer)
+	endPacket(answer)
 
 	return answer
 }
@@ -105,7 +115,7 @@ func errorHndl(mp *ModbusPacket, errCode byte) *ModbusPacket {
 	answer := prepareAnswer(mp, 5)
 	answer.Data[2] = byte(mp.GetFC()) | byte(0x80)
 	answer.Data = append(answer.Data, errCode)
-	endAnswer(answer)
+	endPacket(answer)
 	return answer
 }
 
