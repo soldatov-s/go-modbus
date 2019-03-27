@@ -76,6 +76,7 @@ func (mp *ModbusPacket) GetCrc() uint16 {
 	if mp.Length == 0 || mp.TypeProtocol == ModbusTCP {
 		return 0
 	}
+	fmt.Println(mp.Data[mp.Length-2 : mp.Length])
 	return binary.BigEndian.Uint16(mp.Data[mp.Length-2 : mp.Length])
 }
 
