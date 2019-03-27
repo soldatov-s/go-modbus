@@ -24,7 +24,7 @@ message ModbusWriteBitsRequest {
 
 message ModbusWriteRegistersRequest {
   int32 addr = 1;
-  repeated bool data = 2;
+  repeated int32 data = 2;
 }
 
 message RegisterResponse {

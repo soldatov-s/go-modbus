@@ -6,12 +6,11 @@ package modbusgrpc
 import (
 	context "context"
 	fmt "fmt"
-	math "math"
-
 	proto "github.com/golang/protobuf/proto"
 	grpc "google.golang.org/grpc"
 	codes "google.golang.org/grpc/codes"
 	status "google.golang.org/grpc/status"
+	math "math"
 )
 
 // Reference imports to suppress errors if they are not otherwise used.
@@ -72,6 +71,100 @@ func (m *ModbusRequest) GetCnt() int32 {
 	return 0
 }
 
+type ModbusWriteBitsRequest struct {
+	Addr                 int32    `protobuf:"varint,1,opt,name=addr,proto3" json:"addr,omitempty"`
+	Data                 []bool   `protobuf:"varint,2,rep,packed,name=data,proto3" json:"data,omitempty"`
+	XXX_NoUnkeyedLiteral struct{} `json:"-"`
+	XXX_unrecognized     []byte   `json:"-"`
+	XXX_sizecache        int32    `json:"-"`
+}
+
+func (m *ModbusWriteBitsRequest) Reset()         { *m = ModbusWriteBitsRequest{} }
+func (m *ModbusWriteBitsRequest) String() string { return proto.CompactTextString(m) }
+func (*ModbusWriteBitsRequest) ProtoMessage()    {}
+func (*ModbusWriteBitsRequest) Descriptor() ([]byte, []int) {
+	return fileDescriptor_f4384190c9e71792, []int{1}
+}
+
+func (m *ModbusWriteBitsRequest) XXX_Unmarshal(b []byte) error {
+	return xxx_messageInfo_ModbusWriteBitsRequest.Unmarshal(m, b)
+}
+func (m *ModbusWriteBitsRequest) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	return xxx_messageInfo_ModbusWriteBitsRequest.Marshal(b, m, deterministic)
+}
+func (m *ModbusWriteBitsRequest) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_ModbusWriteBitsRequest.Merge(m, src)
+}
+func (m *ModbusWriteBitsRequest) XXX_Size() int {
+	return xxx_messageInfo_ModbusWriteBitsRequest.Size(m)
+}
+func (m *ModbusWriteBitsRequest) XXX_DiscardUnknown() {
+	xxx_messageInfo_ModbusWriteBitsRequest.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_ModbusWriteBitsRequest proto.InternalMessageInfo
+
+func (m *ModbusWriteBitsRequest) GetAddr() int32 {
+	if m != nil {
+		return m.Addr
+	}
+	return 0
+}
+
+func (m *ModbusWriteBitsRequest) GetData() []bool {
+	if m != nil {
+		return m.Data
+	}
+	return nil
+}
+
+type ModbusWriteRegistersRequest struct {
+	Addr                 int32    `protobuf:"varint,1,opt,name=addr,proto3" json:"addr,omitempty"`
+	Data                 []int32  `protobuf:"varint,2,rep,packed,name=data,proto3" json:"data,omitempty"`
+	XXX_NoUnkeyedLiteral struct{} `json:"-"`
+	XXX_unrecognized     []byte   `json:"-"`
+	XXX_sizecache        int32    `json:"-"`
+}
+
+func (m *ModbusWriteRegistersRequest) Reset()         { *m = ModbusWriteRegistersRequest{} }
+func (m *ModbusWriteRegistersRequest) String() string { return proto.CompactTextString(m) }
+func (*ModbusWriteRegistersRequest) ProtoMessage()    {}
+func (*ModbusWriteRegistersRequest) Descriptor() ([]byte, []int) {
+	return fileDescriptor_f4384190c9e71792, []int{2}
+}
+
+func (m *ModbusWriteRegistersRequest) XXX_Unmarshal(b []byte) error {
+	return xxx_messageInfo_ModbusWriteRegistersRequest.Unmarshal(m, b)
+}
+func (m *ModbusWriteRegistersRequest) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	return xxx_messageInfo_ModbusWriteRegistersRequest.Marshal(b, m, deterministic)
+}
+func (m *ModbusWriteRegistersRequest) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_ModbusWriteRegistersRequest.Merge(m, src)
+}
+func (m *ModbusWriteRegistersRequest) XXX_Size() int {
+	return xxx_messageInfo_ModbusWriteRegistersRequest.Size(m)
+}
+func (m *ModbusWriteRegistersRequest) XXX_DiscardUnknown() {
+	xxx_messageInfo_ModbusWriteRegistersRequest.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_ModbusWriteRegistersRequest proto.InternalMessageInfo
+
+func (m *ModbusWriteRegistersRequest) GetAddr() int32 {
+	if m != nil {
+		return m.Addr
+	}
+	return 0
+}
+
+func (m *ModbusWriteRegistersRequest) GetData() []int32 {
+	if m != nil {
+		return m.Data
+	}
+	return nil
+}
+
 type RegisterResponse struct {
 	Data                 []int32  `protobuf:"varint,1,rep,packed,name=data,proto3" json:"data,omitempty"`
 	XXX_NoUnkeyedLiteral struct{} `json:"-"`
@@ -83,7 +176,7 @@ func (m *RegisterResponse) Reset()         { *m = RegisterResponse{} }
 func (m *RegisterResponse) String() string { return proto.CompactTextString(m) }
 func (*RegisterResponse) ProtoMessage()    {}
 func (*RegisterResponse) Descriptor() ([]byte, []int) {
-	return fileDescriptor_f4384190c9e71792, []int{1}
+	return fileDescriptor_f4384190c9e71792, []int{3}
 }
 
 func (m *RegisterResponse) XXX_Unmarshal(b []byte) error {
@@ -111,26 +204,77 @@ func (m *RegisterResponse) GetData() []int32 {
 	return nil
 }
 
+type BitResponse struct {
+	Data                 []bool   `protobuf:"varint,1,rep,packed,name=data,proto3" json:"data,omitempty"`
+	XXX_NoUnkeyedLiteral struct{} `json:"-"`
+	XXX_unrecognized     []byte   `json:"-"`
+	XXX_sizecache        int32    `json:"-"`
+}
+
+func (m *BitResponse) Reset()         { *m = BitResponse{} }
+func (m *BitResponse) String() string { return proto.CompactTextString(m) }
+func (*BitResponse) ProtoMessage()    {}
+func (*BitResponse) Descriptor() ([]byte, []int) {
+	return fileDescriptor_f4384190c9e71792, []int{4}
+}
+
+func (m *BitResponse) XXX_Unmarshal(b []byte) error {
+	return xxx_messageInfo_BitResponse.Unmarshal(m, b)
+}
+func (m *BitResponse) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	return xxx_messageInfo_BitResponse.Marshal(b, m, deterministic)
+}
+func (m *BitResponse) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_BitResponse.Merge(m, src)
+}
+func (m *BitResponse) XXX_Size() int {
+	return xxx_messageInfo_BitResponse.Size(m)
+}
+func (m *BitResponse) XXX_DiscardUnknown() {
+	xxx_messageInfo_BitResponse.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_BitResponse proto.InternalMessageInfo
+
+func (m *BitResponse) GetData() []bool {
+	if m != nil {
+		return m.Data
+	}
+	return nil
+}
+
 func init() {
-	proto.RegisterType((*ModbusRequest)(nil), "modbus.ModbusRequest")
-	proto.RegisterType((*RegisterResponse)(nil), "modbus.RegisterResponse")
+	proto.RegisterType((*ModbusRequest)(nil), "modbusgrpc.ModbusRequest")
+	proto.RegisterType((*ModbusWriteBitsRequest)(nil), "modbusgrpc.ModbusWriteBitsRequest")
+	proto.RegisterType((*ModbusWriteRegistersRequest)(nil), "modbusgrpc.ModbusWriteRegistersRequest")
+	proto.RegisterType((*RegisterResponse)(nil), "modbusgrpc.RegisterResponse")
+	proto.RegisterType((*BitResponse)(nil), "modbusgrpc.BitResponse")
 }
 
 func init() { proto.RegisterFile("modbus.proto", fileDescriptor_f4384190c9e71792) }
 
 var fileDescriptor_f4384190c9e71792 = []byte{
-	// 169 bytes of a gzipped FileDescriptorProto
-	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0xe2, 0xe2, 0xc9, 0xcd, 0x4f, 0x49,
-	0x2a, 0x2d, 0xd6, 0x2b, 0x28, 0xca, 0x2f, 0xc9, 0x17, 0x62, 0x83, 0xf0, 0x94, 0x4c, 0xb9, 0x78,
-	0x7d, 0xc1, 0xac, 0xa0, 0xd4, 0xc2, 0xd2, 0xd4, 0xe2, 0x12, 0x21, 0x21, 0x2e, 0x96, 0xc4, 0x94,
-	0x94, 0x22, 0x09, 0x46, 0x05, 0x46, 0x0d, 0xd6, 0x20, 0x30, 0x5b, 0x48, 0x80, 0x8b, 0x39, 0x39,
-	0xaf, 0x44, 0x82, 0x09, 0x2c, 0x04, 0x62, 0x2a, 0xa9, 0x71, 0x09, 0x04, 0xa5, 0xa6, 0x67, 0x16,
-	0x97, 0xa4, 0x16, 0x05, 0xa5, 0x16, 0x17, 0xe4, 0xe7, 0x15, 0xa7, 0x82, 0x74, 0xa6, 0x24, 0x96,
-	0x24, 0x4a, 0x30, 0x2a, 0x30, 0x83, 0x74, 0x82, 0xd8, 0x46, 0x51, 0x30, 0xe3, 0x83, 0x53, 0x8b,
-	0xca, 0x32, 0x93, 0x53, 0x85, 0x3c, 0xb9, 0x44, 0x82, 0x52, 0x13, 0x53, 0x3c, 0xf2, 0x73, 0x52,
-	0x32, 0xf3, 0xd2, 0x61, 0x66, 0x14, 0x0b, 0x89, 0xea, 0x41, 0x9d, 0x87, 0xe2, 0x1a, 0x29, 0x09,
-	0x98, 0x30, 0xba, 0x6d, 0x4a, 0x0c, 0x49, 0x6c, 0x60, 0x9f, 0x18, 0x03, 0x02, 0x00, 0x00, 0xff,
-	0xff, 0x1b, 0xca, 0xb8, 0xde, 0xd9, 0x00, 0x00, 0x00,
+	// 312 bytes of a gzipped FileDescriptorProto
+	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0xac, 0x93, 0xcb, 0x4b, 0xc3, 0x40,
+	0x10, 0xc6, 0xfb, 0x14, 0x19, 0x1f, 0x94, 0x41, 0x6c, 0x7d, 0x1c, 0xea, 0x1e, 0xb4, 0xa7, 0x1e,
+	0x14, 0xef, 0x52, 0xb5, 0xa8, 0x50, 0xd4, 0xed, 0xc1, 0x73, 0x9a, 0x1d, 0xca, 0x42, 0xcc, 0xc6,
+	0xdd, 0x89, 0x67, 0xff, 0x74, 0xc9, 0xf6, 0x15, 0xa3, 0x46, 0x11, 0x6f, 0x33, 0x3b, 0xf3, 0xfd,
+	0xf8, 0xf8, 0x98, 0x85, 0xcd, 0x67, 0xa3, 0x26, 0xa9, 0xeb, 0x27, 0xd6, 0xb0, 0x41, 0x98, 0x75,
+	0x53, 0x9b, 0x84, 0xe2, 0x1c, 0xb6, 0x46, 0xbe, 0x93, 0xf4, 0x92, 0x92, 0x63, 0x44, 0x68, 0x04,
+	0x4a, 0xd9, 0x4e, 0xb5, 0x5b, 0xed, 0x35, 0xa5, 0xaf, 0xb1, 0x05, 0xf5, 0x30, 0xe6, 0x4e, 0xcd,
+	0x3f, 0x65, 0xa5, 0xb8, 0x80, 0xdd, 0x99, 0xec, 0xc9, 0x6a, 0xa6, 0x81, 0xe6, 0x52, 0x3d, 0x42,
+	0x43, 0x05, 0x1c, 0x74, 0x6a, 0xdd, 0x7a, 0x6f, 0x5d, 0xfa, 0x5a, 0x5c, 0xc3, 0x41, 0x8e, 0x20,
+	0x69, 0xaa, 0x1d, 0x93, 0xfd, 0x35, 0xa6, 0x39, 0xc7, 0x1c, 0x43, 0x6b, 0xa1, 0x95, 0xe4, 0x12,
+	0x13, 0x3b, 0x5a, 0xee, 0x55, 0x73, 0x7b, 0x47, 0xb0, 0x31, 0xd0, 0xfc, 0xe5, 0xca, 0xdc, 0xd1,
+	0xe9, 0x5b, 0x63, 0x91, 0xc5, 0x98, 0xec, 0xab, 0x0e, 0x09, 0x1f, 0x61, 0x47, 0x52, 0xa0, 0x6e,
+	0x4c, 0xa4, 0x74, 0x3c, 0x5d, 0x7a, 0xc4, 0xbd, 0xfe, 0x2a, 0xc1, 0xfe, 0x87, 0xf8, 0xf6, 0x0f,
+	0xf3, 0xa3, 0xa2, 0x33, 0x51, 0xc1, 0x7b, 0xc0, 0x0c, 0x79, 0x1b, 0x27, 0x29, 0xff, 0x0b, 0x70,
+	0x08, 0xdb, 0x19, 0xf0, 0xd2, 0xe8, 0x68, 0xcc, 0x01, 0xa7, 0xa5, 0xb0, 0x76, 0x7e, 0x94, 0xcb,
+	0x43, 0x54, 0xf0, 0x6e, 0x66, 0xec, 0x8a, 0x5c, 0x68, 0x89, 0xc9, 0x1b, 0xfc, 0x2b, 0x6b, 0x0c,
+	0x38, 0x34, 0x36, 0xa4, 0x51, 0x1a, 0xb1, 0x4e, 0x22, 0xca, 0xcc, 0x39, 0x14, 0x9f, 0x59, 0xc5,
+	0xeb, 0x29, 0x83, 0x4e, 0xa0, 0xfd, 0x60, 0xc9, 0x11, 0x2f, 0xa8, 0xab, 0xf8, 0x4e, 0xbe, 0x21,
+	0x17, 0xaf, 0xea, 0xa7, 0x30, 0x27, 0x6b, 0xfe, 0x83, 0x9c, 0xbd, 0x07, 0x00, 0x00, 0xff, 0xff,
+	0xed, 0xf3, 0xf0, 0x0e, 0x30, 0x03, 0x00, 0x00,
 }
 
 // Reference imports to suppress errors if they are not otherwise used.
@@ -146,6 +290,11 @@ const _ = grpc.SupportPackageIsVersion4
 // For semantics around ctx use and closing/ending streaming RPCs, please refer to https://godoc.org/google.golang.org/grpc#ClientConn.NewStream.
 type ModbusServiceClient interface {
 	ReadHoldingRegisters(ctx context.Context, in *ModbusRequest, opts ...grpc.CallOption) (*RegisterResponse, error)
+	ReadInputRegisters(ctx context.Context, in *ModbusRequest, opts ...grpc.CallOption) (*RegisterResponse, error)
+	ReadCoilStatus(ctx context.Context, in *ModbusRequest, opts ...grpc.CallOption) (*BitResponse, error)
+	ReadDescreteInputs(ctx context.Context, in *ModbusRequest, opts ...grpc.CallOption) (*BitResponse, error)
+	ForceMultipleCoils(ctx context.Context, in *ModbusWriteBitsRequest, opts ...grpc.CallOption) (*BitResponse, error)
+	PresetMultipleRegisters(ctx context.Context, in *ModbusWriteRegistersRequest, opts ...grpc.CallOption) (*RegisterResponse, error)
 }
 
 type modbusServiceClient struct {
@@ -158,7 +307,52 @@ func NewModbusServiceClient(cc *grpc.ClientConn) ModbusServiceClient {
 
 func (c *modbusServiceClient) ReadHoldingRegisters(ctx context.Context, in *ModbusRequest, opts ...grpc.CallOption) (*RegisterResponse, error) {
 	out := new(RegisterResponse)
-	err := c.cc.Invoke(ctx, "/modbus.ModbusService/ReadHoldingRegisters", in, out, opts...)
+	err := c.cc.Invoke(ctx, "/modbusgrpc.ModbusService/ReadHoldingRegisters", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *modbusServiceClient) ReadInputRegisters(ctx context.Context, in *ModbusRequest, opts ...grpc.CallOption) (*RegisterResponse, error) {
+	out := new(RegisterResponse)
+	err := c.cc.Invoke(ctx, "/modbusgrpc.ModbusService/ReadInputRegisters", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *modbusServiceClient) ReadCoilStatus(ctx context.Context, in *ModbusRequest, opts ...grpc.CallOption) (*BitResponse, error) {
+	out := new(BitResponse)
+	err := c.cc.Invoke(ctx, "/modbusgrpc.ModbusService/ReadCoilStatus", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *modbusServiceClient) ReadDescreteInputs(ctx context.Context, in *ModbusRequest, opts ...grpc.CallOption) (*BitResponse, error) {
+	out := new(BitResponse)
+	err := c.cc.Invoke(ctx, "/modbusgrpc.ModbusService/ReadDescreteInputs", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *modbusServiceClient) ForceMultipleCoils(ctx context.Context, in *ModbusWriteBitsRequest, opts ...grpc.CallOption) (*BitResponse, error) {
+	out := new(BitResponse)
+	err := c.cc.Invoke(ctx, "/modbusgrpc.ModbusService/ForceMultipleCoils", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *modbusServiceClient) PresetMultipleRegisters(ctx context.Context, in *ModbusWriteRegistersRequest, opts ...grpc.CallOption) (*RegisterResponse, error) {
+	out := new(RegisterResponse)
+	err := c.cc.Invoke(ctx, "/modbusgrpc.ModbusService/PresetMultipleRegisters", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -168,6 +362,11 @@ func (c *modbusServiceClient) ReadHoldingRegisters(ctx context.Context, in *Modb
 // ModbusServiceServer is the server API for ModbusService service.
 type ModbusServiceServer interface {
 	ReadHoldingRegisters(context.Context, *ModbusRequest) (*RegisterResponse, error)
+	ReadInputRegisters(context.Context, *ModbusRequest) (*RegisterResponse, error)
+	ReadCoilStatus(context.Context, *ModbusRequest) (*BitResponse, error)
+	ReadDescreteInputs(context.Context, *ModbusRequest) (*BitResponse, error)
+	ForceMultipleCoils(context.Context, *ModbusWriteBitsRequest) (*BitResponse, error)
+	PresetMultipleRegisters(context.Context, *ModbusWriteRegistersRequest) (*RegisterResponse, error)
 }
 
 // UnimplementedModbusServiceServer can be embedded to have forward compatible implementations.
@@ -176,6 +375,21 @@ type UnimplementedModbusServiceServer struct {
 
 func (*UnimplementedModbusServiceServer) ReadHoldingRegisters(ctx context.Context, req *ModbusRequest) (*RegisterResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method ReadHoldingRegisters not implemented")
+}
+func (*UnimplementedModbusServiceServer) ReadInputRegisters(ctx context.Context, req *ModbusRequest) (*RegisterResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method ReadInputRegisters not implemented")
+}
+func (*UnimplementedModbusServiceServer) ReadCoilStatus(ctx context.Context, req *ModbusRequest) (*BitResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method ReadCoilStatus not implemented")
+}
+func (*UnimplementedModbusServiceServer) ReadDescreteInputs(ctx context.Context, req *ModbusRequest) (*BitResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method ReadDescreteInputs not implemented")
+}
+func (*UnimplementedModbusServiceServer) ForceMultipleCoils(ctx context.Context, req *ModbusWriteBitsRequest) (*BitResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method ForceMultipleCoils not implemented")
+}
+func (*UnimplementedModbusServiceServer) PresetMultipleRegisters(ctx context.Context, req *ModbusWriteRegistersRequest) (*RegisterResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method PresetMultipleRegisters not implemented")
 }
 
 func RegisterModbusServiceServer(s *grpc.Server, srv ModbusServiceServer) {
@@ -192,7 +406,7 @@ func _ModbusService_ReadHoldingRegisters_Handler(srv interface{}, ctx context.Co
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: "/modbus.ModbusService/ReadHoldingRegisters",
+		FullMethod: "/modbusgrpc.ModbusService/ReadHoldingRegisters",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
 		return srv.(ModbusServiceServer).ReadHoldingRegisters(ctx, req.(*ModbusRequest))
@@ -200,13 +414,123 @@ func _ModbusService_ReadHoldingRegisters_Handler(srv interface{}, ctx context.Co
 	return interceptor(ctx, in, info, handler)
 }
 
+func _ModbusService_ReadInputRegisters_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(ModbusRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(ModbusServiceServer).ReadInputRegisters(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/modbusgrpc.ModbusService/ReadInputRegisters",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(ModbusServiceServer).ReadInputRegisters(ctx, req.(*ModbusRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _ModbusService_ReadCoilStatus_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(ModbusRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(ModbusServiceServer).ReadCoilStatus(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/modbusgrpc.ModbusService/ReadCoilStatus",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(ModbusServiceServer).ReadCoilStatus(ctx, req.(*ModbusRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _ModbusService_ReadDescreteInputs_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(ModbusRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(ModbusServiceServer).ReadDescreteInputs(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/modbusgrpc.ModbusService/ReadDescreteInputs",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(ModbusServiceServer).ReadDescreteInputs(ctx, req.(*ModbusRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _ModbusService_ForceMultipleCoils_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(ModbusWriteBitsRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(ModbusServiceServer).ForceMultipleCoils(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/modbusgrpc.ModbusService/ForceMultipleCoils",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(ModbusServiceServer).ForceMultipleCoils(ctx, req.(*ModbusWriteBitsRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _ModbusService_PresetMultipleRegisters_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(ModbusWriteRegistersRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(ModbusServiceServer).PresetMultipleRegisters(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/modbusgrpc.ModbusService/PresetMultipleRegisters",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(ModbusServiceServer).PresetMultipleRegisters(ctx, req.(*ModbusWriteRegistersRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 var _ModbusService_serviceDesc = grpc.ServiceDesc{
-	ServiceName: "modbus.ModbusService",
+	ServiceName: "modbusgrpc.ModbusService",
 	HandlerType: (*ModbusServiceServer)(nil),
 	Methods: []grpc.MethodDesc{
 		{
 			MethodName: "ReadHoldingRegisters",
 			Handler:    _ModbusService_ReadHoldingRegisters_Handler,
+		},
+		{
+			MethodName: "ReadInputRegisters",
+			Handler:    _ModbusService_ReadInputRegisters_Handler,
+		},
+		{
+			MethodName: "ReadCoilStatus",
+			Handler:    _ModbusService_ReadCoilStatus_Handler,
+		},
+		{
+			MethodName: "ReadDescreteInputs",
+			Handler:    _ModbusService_ReadDescreteInputs_Handler,
+		},
+		{
+			MethodName: "ForceMultipleCoils",
+			Handler:    _ModbusService_ForceMultipleCoils_Handler,
+		},
+		{
+			MethodName: "PresetMultipleRegisters",
+			Handler:    _ModbusService_PresetMultipleRegisters_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},

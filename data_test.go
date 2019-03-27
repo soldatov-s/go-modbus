@@ -27,7 +27,7 @@ func TestModbusData_checkOutside(t *testing.T) {
 		holding_reg:     []uint16{0, 0, 0},
 		input_reg:       []uint16{0, 0, 0}}
 	for _, pair := range testscheckOutside {
-		res, _ := md.checkOutside(pair.dataType, pair.addr, pair.cnt)
+		res, _ := md.isNotOutside(pair.dataType, pair.addr, pair.cnt)
 		if res != pair.res {
 			t.Error(
 				"For ModbusDataType", pair.dataType, "addr=", pair.addr, "cnt=", pair.cnt,

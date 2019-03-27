@@ -83,14 +83,19 @@ func (s *ModbusService) ReadDescreteInputs(ctx context.Context, req *ModbusReque
 // PresetMultipleRegisters handel request to gRPC server
 func (s *ModbusService) PresetMultipleRegisters(ctx context.Context, req *ModbusWriteRegistersRequest) (*RegisterResponse, error) {
 
+	req_int16 := make([]uint16, 0, len(req.Data))
+	for _, a := range req.Data {
+		req_int16 = append(req_int16, uint16(a))
+	}
+
 	// Write holding registers to ModbusData
-	err := s.Data.PresetMultipleRegisters(uint16(req.Addr), uint16(req.Cnt))
+	err := s.Data.PresetMultipleRegisters(uint16(req.Addr), req_int16)
 	if err != nil {
 		return nil, err
 	}
-	
+
 	// Read holding registers from ModbusData
-	answer, err := s.Data.ReadHoldingRegisters(uint16(req.Addr), uint16(req.Cnt))
+	answer, err := s.Data.ReadHoldingRegisters(uint16(req.Addr), uint16(len(req.Data)))
 	if err != nil {
 		return nil, err
 	}
@@ -104,16 +109,16 @@ func (s *ModbusService) PresetMultipleRegisters(ctx context.Context, req *Modbus
 }
 
 // ForceMultipleCoils handel request to gRPC server
-func (s *ModbusService) ForceMultipleCoils(ctx context.Context, req *ModbusWriteRegistersRequest) (*BitResponse, error) {
+func (s *ModbusService) ForceMultipleCoils(ctx context.Context, req *ModbusWriteBitsRequest) (*BitResponse, error) {
 
 	// Write coils to ModbusData
-	err := s.Data.ForceMultipleCoils(uint16(req.Addr), uint16(req.Cnt))
+	err := s.Data.ForceMultipleCoils(uint16(req.Addr), req.Data)
 	if err != nil {
 		return nil, err
 	}
-	
+
 	// Read coils from ModbusData
-	answer, err := s.Data.ReadCoilStatus(uint16(req.Addr), uint16(req.Cnt))
+	answer, err := s.Data.ReadCoilStatus(uint16(req.Addr), uint16(len(req.Data)))
 	if err != nil {
 		return nil, err
 	}

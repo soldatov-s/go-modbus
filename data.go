@@ -28,8 +28,8 @@ type ModbusData struct {
 }
 
 // Checks that requested data is not outside the present range
-func (md *ModbusData) checkOutside(dataType ModbusDataType, addr, cnt uint16) (bool, error) {
-	var err error		
+func (md *ModbusData) isNotOutside(dataType ModbusDataType, addr, cnt uint16) (bool, error) {
+	var err error
 	l := 0
 	switch dataType {
 	case HoldingRegisters:
@@ -45,7 +45,7 @@ func (md *ModbusData) checkOutside(dataType ModbusDataType, addr, cnt uint16) (b
 	if addr+cnt > uint16(l) {
 		err_str := fmt.Sprintf("Requested data %d...%d outside the valid range 0...%d", addr, addr+cnt, l)
 		err = errors.New(err_str)
-		return true, err
+		return false, err
 	}
 
 	return true, nil
@@ -66,7 +66,7 @@ func (md *ModbusData) Init(coils_cnt, discrete_inputs_cnt, holding_reg_cnt, inpu
 // Preset Single Register
 func (md *ModbusData) PresetSingleRegister(addr uint16, data uint16) error {
 	cnt := uint16(1)
-	_, err := md.checkOutside(HoldingRegisters, addr, cnt)
+	_, err := md.isNotOutside(HoldingRegisters, addr, cnt)
 	md.mu_holding_regs.Lock()
 	defer md.mu_holding_regs.Unlock()
 	md.holding_reg[addr] = data
@@ -76,7 +76,7 @@ func (md *ModbusData) PresetSingleRegister(addr uint16, data uint16) error {
 // Set Preset Multiple Registers
 func (md *ModbusData) PresetMultipleRegisters(addr uint16, data []uint16) error {
 	cnt := uint16(len(data))
-	_, err := md.checkOutside(HoldingRegisters, addr, cnt)
+	_, err := md.isNotOutside(HoldingRegisters, addr, cnt)
 	md.mu_holding_regs.Lock()
 	defer md.mu_holding_regs.Unlock()
 	copy(md.holding_reg[addr:addr+cnt], data)
@@ -85,7 +85,7 @@ func (md *ModbusData) PresetMultipleRegisters(addr uint16, data []uint16) error 
 
 // Read Holding Registers
 func (md *ModbusData) ReadHoldingRegisters(addr, cnt uint16) ([]uint16, error) {
-	_, err := md.checkOutside(HoldingRegisters, addr, cnt)
+	_, err := md.isNotOutside(HoldingRegisters, addr, cnt)
 	if err != nil {
 		return nil, err
 	}
@@ -94,7 +94,7 @@ func (md *ModbusData) ReadHoldingRegisters(addr, cnt uint16) ([]uint16, error) {
 
 // Read Input Registers
 func (md *ModbusData) ReadInputRegisters(addr, cnt uint16) ([]uint16, error) {
-	_, err := md.checkOutside(InputRegisters, addr, cnt)
+	_, err := md.isNotOutside(InputRegisters, addr, cnt)
 	if err != nil {
 		return nil, err
 	}
@@ -103,14 +103,14 @@ func (md *ModbusData) ReadInputRegisters(addr, cnt uint16) ([]uint16, error) {
 
 // Read Coil Status
 func (md *ModbusData) ReadCoilStatus(addr, cnt uint16) ([]bool, error) {
-	_, err := md.checkOutside(Coils, addr, cnt)
+	_, err := md.isNotOutside(Coils, addr, cnt)
 	return md.coils[addr : addr+cnt], err
 }
 
 // Force Single Coil
 func (md *ModbusData) ForceSingleCoil(addr uint16, data bool) error {
 	cnt := uint16(1)
-	_, err := md.checkOutside(Coils, addr, cnt)
+	_, err := md.isNotOutside(Coils, addr, cnt)
 	md.mu_coils.Lock()
 	defer md.mu_coils.Unlock()
 	md.coils[addr] = data
@@ -120,7 +120,7 @@ func (md *ModbusData) ForceSingleCoil(addr uint16, data bool) error {
 // Force Multiple Coils
 func (md *ModbusData) ForceMultipleCoils(addr uint16, data []bool) error {
 	cnt := uint16(len(data))
-	_, err := md.checkOutside(Coils, addr, cnt)
+	_, err := md.isNotOutside(Coils, addr, cnt)
 	md.mu_coils.Lock()
 	defer md.mu_coils.Unlock()
 	copy(md.coils[addr:addr+cnt], data)
@@ -129,6 +129,6 @@ func (md *ModbusData) ForceMultipleCoils(addr uint16, data []bool) error {
 
 // Read Descrete Inputs
 func (md *ModbusData) ReadDescreteInputs(addr, cnt uint16) ([]bool, error) {
-	_, err := md.checkOutside(DiscreteInputs, addr, cnt)
+	_, err := md.isNotOutside(DiscreteInputs, addr, cnt)
 	return md.coils[addr : addr+cnt], err
 }

@@ -7,7 +7,6 @@ package modbus
 import (
 	"encoding/binary"
 	"errors"
-	"log"
 )
 
 // Type of Modbus function
@@ -68,14 +67,14 @@ func (fc ModbusFunctionCode) Handler(mp *ModbusPacket, md *ModbusData) (*ModbusP
 	case PresetMultipleRegisters:
 		return PresetMultipleRegistersHndl(mp, md)
 	default:
-		return errorHndl(mp, 1), errors.New("Unknown function code")
+		return buildErrAnswer(mp, 1), errors.New("Unknown function code")
 	}
 }
 
 // Build ModbusPacket
-func buildPacket(TypeProtocol ModbusTypeProtocol, dev_id byte, fc ModbusFunctionCode, 
-		 par1, par2 uint16, data ...byte) *ModbusPacket {
-	isError := bool(byte(mp.GetFC() & byte(0x80) != 0)
+func buildPacket(TypeProtocol ModbusTypeProtocol, dev_id byte, fc ModbusFunctionCode,
+	par1, par2 uint16, data ...byte) *ModbusPacket {
+	isError := bool(byte(fc)&byte(0x80) != 0)
 	mp := new(ModbusPacket)
 	mp.TypeProtocol = TypeProtocol
 	mp.Length = 4 // dev_id, fc, crc
@@ -83,19 +82,19 @@ func buildPacket(TypeProtocol ModbusTypeProtocol, dev_id byte, fc ModbusFunction
 	// ReadRegs/ReadIns - 2 + 2; Answer - 1 + data_len
 	// WriteRegs/WriteOuts - 2 + 2 + 1 + data_len; Answer - 2 + 2
 	// WriteReg/WriteOut - 2 + 2; Answer - 2 + 2
-	
+
 	// FC with parameters length
 	switch fc {
-	case ReadCoilStatus, ReadDescreteInputs, ReadHoldingRegistersHndl:
-		// data == nill is a request
-		if data == nill {
+	case ReadCoilStatus, ReadDescreteInputs, ReadHoldingRegisters:
+		// data == nil is a request
+		if data == nil {
 			mp.Length += 4
 		} else {
 			mp.Length += 1
 		}
 	case ForceMultipleCoils, PresetMultipleRegisters:
-		// data != nill is a request
-		if data != nill {
+		// data != nil is a request
+		if data != nil {
 			mp.Length += 5
 		} else {
 			mp.Length += 4
@@ -112,12 +111,12 @@ func buildPacket(TypeProtocol ModbusTypeProtocol, dev_id byte, fc ModbusFunction
 		return nil
 	}
 	// Data length
-	if (fc == ReadCoilStatus || fc == ReadDescreteInputs) && data == nill {
+	if (fc == ReadCoilStatus || fc == ReadDescreteInputs) && data == nil {
 		q, r := par2/8, par2%8
 		if r > 0 {
 			q++
 		}
-		mp.Length += q
+		mp.Length += int(q)
 	} else {
 		mp.Length += len(data)
 	}
@@ -127,23 +126,25 @@ func buildPacket(TypeProtocol ModbusTypeProtocol, dev_id byte, fc ModbusFunction
 	binary.BigEndian.PutUint16(mp.Data[2:3], par1)
 	if !isError {
 		binary.BigEndian.PutUint16(mp.Data[4:6], par2)
-		if data != nill {
+		if data != nil {
 			mp.Data = append(mp.Data, data...)
 		}
 	}
 	AppendCrc16(&mp.Data)
+
+	return mp
 }
 
 // Build answer for request
 func buildAnswer(req *ModbusPacket, fc ModbusFunctionCode, data ...byte) *ModbusPacket {
 	par1 := binary.BigEndian.Uint16(req.Data[2:3])
 	par2 := binary.BigEndian.Uint16(req.Data[4:6])
-	return buildPacket(req.TypeProtocol, req.GetAddr(), byte(req.GetFC()), par1, par2, data...)
+	return buildPacket(req.TypeProtocol, req.GetAddr(), req.GetFC(), par1, par2, data...)
 }
 
 // Error handler, builds ModbusPacket for error answer
-func buildErrAnswer(req *ModbusPacket, errCode byte) *ModbusPacket {
-	return buildPacket(req.TypeProtocol, req.GetAddr(), byte(req.GetFC()) | byte(0x80), errCode, 0)
+func buildErrAnswer(req *ModbusPacket, errCode uint16) *ModbusPacket {
+	return buildPacket(req.TypeProtocol, req.GetAddr(), req.GetFC()|ModbusFunctionCode(0x80), errCode, 0)
 }
 
 // Convert word array to byte array
@@ -163,7 +164,6 @@ func ReadHoldingRegistersHndl(mp *ModbusPacket, md *ModbusData) (*ModbusPacket, 
 	// Try get data for answer
 	data, err := md.ReadHoldingRegisters(addr, cnt)
 	if err != nil {
-		log.Println(err)
 		return buildErrAnswer(mp, 2), err
 	}
 	return buildAnswer(mp, ReadHoldingRegisters, wordArrToByteArr(data)...), nil
@@ -177,7 +177,6 @@ func ReadInputRegistersHndl(mp *ModbusPacket, md *ModbusData) (*ModbusPacket, er
 	// Try get data for answer
 	data, err := md.ReadInputRegisters(addr, cnt)
 	if err != nil {
-		log.Println(err)
 		return buildErrAnswer(mp, 2), err
 	}
 	return buildAnswer(mp, ReadInputRegisters, wordArrToByteArr(data)...), nil
@@ -243,7 +242,6 @@ func ReadCoilStatusHndl(mp *ModbusPacket, md *ModbusData) (*ModbusPacket, error)
 	// Data for answer
 	data, err := md.ReadCoilStatus(addr, cnt)
 	if err != nil {
-		log.Println(err)
 		return buildErrAnswer(mp, 2), err
 	}
 	return buildAnswer(mp, ReadCoilStatus, boolArrToByteArr(data)...), nil
@@ -257,7 +255,6 @@ func ReadDescreteInputsHndl(mp *ModbusPacket, md *ModbusData) (*ModbusPacket, er
 	// Data for answer
 	data, err := md.ReadDescreteInputs(addr, cnt)
 	if err != nil {
-		log.Println(err)
 		return buildErrAnswer(mp, 2), err
 	}
 	return buildAnswer(mp, ReadDescreteInputs, boolArrToByteArr(data)...), nil
@@ -309,5 +306,5 @@ func ForceMultipleCoilsHndl(mp *ModbusPacket, md *ModbusData) (*ModbusPacket, er
 	if err != nil {
 		return buildErrAnswer(mp, 2), err
 	}
-	return buildAnswer(mp, ForceMultipleCoils), nill
+	return buildAnswer(mp, ForceMultipleCoils), nil
 }

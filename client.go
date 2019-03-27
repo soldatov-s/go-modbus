@@ -5,7 +5,6 @@
 package modbus
 
 import (
-	"encoding/binary"
 	"log"
 	"net"
 )
@@ -38,7 +37,7 @@ func (mc *ModbusClient) ReadAnswer() (*ModbusPacket, error) {
 	answer.Init()
 
 	log.Printf(
-		"Src->: %s\ Dst<-: %s\n",
+		"Src->: %s Dst<-: %s\n",
 		mc.Conn.RemoteAddr(),
 		mc.Conn.LocalAddr())
 

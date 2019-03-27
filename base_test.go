@@ -5,26 +5,27 @@
 package modbus
 
 import (
+	"fmt"
+	"strings"
 	"testing"
-  "strings"
 )
 
 func TestModbusBaseServer_String(t *testing.T) {
-  test_str := "test:504"
-  srv := &ModbusBaseServer{Host: "test", Port: "504"}
-  s := fmt.Sprintf("%s", srv)
-  r := strings.Compare(s, test_str)
-  if r != 0 {
-		t.Error("Expected ", test_str, "got ",r)
-  }
+	test_str := "test:504"
+	srv := &ModbusBaseServer{Host: "test", Port: "504"}
+	s := fmt.Sprintf("%s", srv)
+	r := strings.Compare(s, test_str)
+	if r != 0 {
+		t.Error("Expected ", test_str, "got ", r)
+	}
 }
 
 func TestModbusBaseClient_String(t *testing.T) {
-  test_str := "test:504"
-  srv := &ModbusBaseServer{Host: "test", Port: "504"}
-  s := fmt.Sprintf("%s", srv)
-  r := strings.Compare(s, test_str)
-  if r != 0 {
-		t.Error("Expected ", test_str, "got ",r)
-  }
+	test_str := "test:504"
+	srv := &ModbusBaseServer{Host: "test", Port: "504"}
+	s := fmt.Sprintf("%s", srv)
+	r := strings.Compare(s, test_str)
+	if r != 0 {
+		t.Error("Expected ", test_str, "got ", r)
+	}
 }
