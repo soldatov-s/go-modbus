@@ -79,17 +79,18 @@ func (rest *ModbusRest) hndlCoils(w http.ResponseWriter, r *http.Request) {
 		var req ModbusWriteBoolReq
 		_ = json.NewDecoder(r.Body).Decode(&req)
 		rest.Data.ForceMultipleCoils(req.Addr, req.Data)
-		answer.Data, err = rest.Data.ReadCoilStatus(req.Addr, uint16(len(req.Data)))
+		addr = req.Addr
+		cnt = uint16(len(req.Data))				
 	case "GET":
 		addr, cnt, err = parseParam(r)
 		if err != nil {
 			return
 		}
-		answer.Data, err = rest.Data.ReadCoilStatus(addr, cnt)
 	default:
 		errAnswer(w, r)
 		return
 	}
+	answer.Data, err = rest.Data.ReadCoilStatus(addr, cnt)
 	if err != nil {
 		return
 	}
@@ -131,18 +132,20 @@ func (rest *ModbusRest) hndlHoldReg(w http.ResponseWriter, r *http.Request) {
 		var req ModbusWriteRegReq
 		_ = json.NewDecoder(r.Body).Decode(&req)
 		rest.Data.PresetMultipleRegisters(req.Addr, req.Data)
-
-		answer.Data, err = rest.Data.ReadHoldingRegisters(req.Addr, uint16(len(req.Data)))
+		addr = req.Addr
+		cnt = uint16(len(req.Data))
+		
 	case "GET":
 		addr, cnt, err = parseParam(r)
 		if err != nil {
 			return
 		}
-		answer.Data, err = rest.Data.ReadHoldingRegisters(addr, cnt)
+		
 	default:
 		errAnswer(w, r)
 		return
 	}
+	answer.Data, err = rest.Data.ReadHoldingRegisters(addr, cnt)
 	if err != nil {
 		return
 	}
