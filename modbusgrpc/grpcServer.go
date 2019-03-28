@@ -22,108 +22,82 @@ type ModbusService struct {
 	ln net.Listener // Listener
 }
 
+func int16ArrToInt32Arr(data []int16) []int32{
+	data_int32 := make([]int32, 0, len(data))
+	for _, a := range answer {
+		data_int32 = append(data_int32, int32(a))
+	}
+	return data_int32
+}
+
 // ReadHoldingRegisters handel request to gRPC server
 func (s *ModbusService) ReadHoldingRegisters(ctx context.Context, req *ModbusRequest) (*RegisterResponse, error) {
-
 	// Read holding registers from ModbusData
 	answer, err := s.Data.ReadHoldingRegisters(uint16(req.Addr), uint16(req.Cnt))
 	if err != nil {
 		return nil, err
 	}
-
-	answer_int32 := make([]int32, 0, len(answer))
-	for _, a := range answer {
-		answer_int32 = append(answer_int32, int32(a))
-	}
-
-	return &RegisterResponse{Data: answer_int32}, nil
+	return &RegisterResponse{Data: int16ArrToInt32Arr(answer)}, nil
 }
 
 // ReadInputRegisters handel request to gRPC server
 func (s *ModbusService) ReadInputRegisters(ctx context.Context, req *ModbusRequest) (*RegisterResponse, error) {
-
 	// Read input registers from ModbusData
 	answer, err := s.Data.ReadInputRegisters(uint16(req.Addr), uint16(req.Cnt))
 	if err != nil {
 		return nil, err
 	}
-
-	answer_int32 := make([]int32, 0, len(answer))
-	for _, a := range answer {
-		answer_int32 = append(answer_int32, int32(a))
-	}
-
-	return &RegisterResponse{Data: answer_int32}, nil
+	return &RegisterResponse{Data: int16ArrToInt32Arr(answer)}, nil
 }
 
 // ReadCoilStatus handel request to gRPC server
 func (s *ModbusService) ReadCoilStatus(ctx context.Context, req *ModbusRequest) (*BitResponse, error) {
-
 	// Read coils from ModbusData
 	answer, err := s.Data.ReadCoilStatus(uint16(req.Addr), uint16(req.Cnt))
 	if err != nil {
 		return nil, err
 	}
-
 	return &BitResponse{Data: answer}, nil
 }
 
 // ReadDescreteInputs handel request to gRPC server
 func (s *ModbusService) ReadDescreteInputs(ctx context.Context, req *ModbusRequest) (*BitResponse, error) {
-
 	// Read inputs from ModbusData
 	answer, err := s.Data.ReadDescreteInputs(uint16(req.Addr), uint16(req.Cnt))
 	if err != nil {
 		return nil, err
 	}
-
 	return &BitResponse{Data: answer}, nil
+}
+
+func int32ArrToInt16Arr(data []int32) []int16{
+	data_int16 := make([]int16, 0, len(data))
+	for _, a := range answer {
+		data_int16 = append(data_int16, int16(a))
+	}
+	return data_int16
 }
 
 // PresetMultipleRegisters handel request to gRPC server
 func (s *ModbusService) PresetMultipleRegisters(ctx context.Context, req *ModbusWriteRegistersRequest) (*RegisterResponse, error) {
-
-	req_int16 := make([]uint16, 0, len(req.Data))
-	for _, a := range req.Data {
-		req_int16 = append(req_int16, uint16(a))
-	}
-
 	// Write holding registers to ModbusData
-	err := s.Data.PresetMultipleRegisters(uint16(req.Addr), req_int16...)
+	err := s.Data.PresetMultipleRegisters(uint16(req.Addr), int32ArrToInt16Arr(req.Data)...)
 	if err != nil {
 		return nil, err
 	}
-
-	// Read holding registers from ModbusData
-	answer, err := s.Data.ReadHoldingRegisters(uint16(req.Addr), uint16(len(req.Data)))
-	if err != nil {
-		return nil, err
-	}
-
-	answer_int32 := make([]int32, 0, len(answer))
-	for _, a := range answer {
-		answer_int32 = append(answer_int32, int32(a))
-	}
-
-	return &RegisterResponse{Data: answer_int32}, nil
+	// Read holding registers
+	return s.ReadHoldingRegisters(ctx, &ModbusRequest{Addr: req.Addr, Cnt: len(req.Data)}
 }
 
 // ForceMultipleCoils handel request to gRPC server
 func (s *ModbusService) ForceMultipleCoils(ctx context.Context, req *ModbusWriteBitsRequest) (*BitResponse, error) {
-
 	// Write coils to ModbusData
 	err := s.Data.ForceMultipleCoils(uint16(req.Addr), req.Data...)
 	if err != nil {
 		return nil, err
 	}
-
-	// Read coils from ModbusData
-	answer, err := s.Data.ReadCoilStatus(uint16(req.Addr), uint16(len(req.Data)))
-	if err != nil {
-		return nil, err
-	}
-
-	return &BitResponse{Data: answer}, nil
+	// Read coils
+	return s.ReadCoilStatus(ctx, &ModbusRequest{Addr: req.Addr, Cnt: len(req.Data)}
 }
 
 func NewgRPCService(host, port string, md *ModbusData) *ModbusService {
