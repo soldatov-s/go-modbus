@@ -302,7 +302,7 @@ func ForceMultipleCoilsHndl(mp *ModbusPacket, md *ModbusData) (*ModbusPacket, er
 	cnt_byte := mp.Data[6]
 
 	// Set values in ModbusData
-	err := md.ForceMultipleCoils(addr, byteArrToBoolArr(mp.Data[8:8+cnt_byte*2], cnt))
+	err := md.ForceMultipleCoils(addr, byteArrToBoolArr(mp.Data[8:8+cnt_byte], cnt))
 	if err != nil {
 		return buildErrAnswer(mp, 2), err
 	}
