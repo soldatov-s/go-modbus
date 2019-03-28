@@ -209,7 +209,7 @@ func PresetMultipleRegistersHndl(mp *ModbusPacket, md *ModbusData) (*ModbusPacke
 	cnt := binary.BigEndian.Uint16(mp.Data[4:6])
 
 	// Set values in ModbusData
-	err := md.PresetMultipleRegisters(addr, byteArrToWordArr(mp.Data[7:7+cnt*2]))
+	err := md.PresetMultipleRegisters(addr, byteArrToWordArr(mp.Data[7:7+cnt*2])...)
 	if err != nil {
 		return buildErrAnswer(mp, 2), err
 	}
@@ -302,7 +302,7 @@ func ForceMultipleCoilsHndl(mp *ModbusPacket, md *ModbusData) (*ModbusPacket, er
 	cnt_byte := mp.Data[6]
 
 	// Set values in ModbusData
-	err := md.ForceMultipleCoils(addr, byteArrToBoolArr(mp.Data[8:8+cnt_byte], cnt))
+	err := md.ForceMultipleCoils(addr, byteArrToBoolArr(mp.Data[8:8+cnt_byte], cnt)...)
 	if err != nil {
 		return buildErrAnswer(mp, 2), err
 	}
