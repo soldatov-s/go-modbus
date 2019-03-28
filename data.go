@@ -83,6 +83,14 @@ func (md *ModbusData) PresetMultipleRegisters(addr uint16, data []uint16) error 
 	return err
 }
 
+// Set Preset Multiple Input Registers, for tests
+func (md *ModbusData) PresetMultipleInputsRegisters(addr uint16, data []uint16) error {
+	cnt := uint16(len(data))
+	_, err := md.isNotOutside(InputRegisters, addr, cnt)
+	copy(md.input_reg[addr:addr+cnt], data)
+	return err
+}
+
 // Read Holding Registers
 func (md *ModbusData) ReadHoldingRegisters(addr, cnt uint16) ([]uint16, error) {
 	_, err := md.isNotOutside(HoldingRegisters, addr, cnt)
@@ -127,8 +135,16 @@ func (md *ModbusData) ForceMultipleCoils(addr uint16, data []bool) error {
 	return err
 }
 
+// Force Multiple Descrete Inputs, for tests
+func (md *ModbusData) ForceMultipleDescreteInputs(addr uint16, data []bool) error {
+	cnt := uint16(len(data))
+	_, err := md.isNotOutside(DiscreteInputs, addr, cnt)
+	copy(md.discrete_inputs[addr:addr+cnt], data)
+	return err
+}
+
 // Read Descrete Inputs
 func (md *ModbusData) ReadDescreteInputs(addr, cnt uint16) ([]bool, error) {
 	_, err := md.isNotOutside(DiscreteInputs, addr, cnt)
-	return md.coils[addr : addr+cnt], err
+	return md.discrete_inputs[addr : addr+cnt], err
 }
