@@ -27,21 +27,17 @@ type ModbusServer struct {
 
 // NewServer function initializate new instance of ModbusServer
 func NewServer(host, port string, mbprotocol ModbusTypeProtocol, md *ModbusData) *ModbusServer {
-	srv := new(ModbusServer)
-	srv.Host = host
-	srv.Port = port
-	srv.MTP = mbprotocol
-	srv.Data = md
-	srv.done = make(chan struct{})
-	srv.exited = make(chan struct{})
-
+	srv := &ModbusServer{Host: host, 
+			     Port: port, 
+			     MTP: mbprotocol, 
+			     Data: md,
+			     done: make(chan struct{}),
+			     exited: make(chan struct{}),}
 	return srv
 }
 
 // Stop function close listener and wait closing all connection
 func (srv *ModbusServer) Stop() error {
-	var err error
-
 	log.Println("Shutting down server...")
 	if srv.ln != nil {
 		srv.ln.Close()
@@ -49,7 +45,7 @@ func (srv *ModbusServer) Stop() error {
 	close(srv.done)
 	srv.wg.Wait()
 	log.Println("Server is stopped")
-	return err
+	return nil
 }
 
 // Start function begin listen incoming connection
@@ -93,7 +89,7 @@ func (srv *ModbusServer) Start() error {
 	}()
 
 	log.Println("Server is started")
-	return err
+	return nil
 }
 
 // Handles incoming requests.
@@ -137,14 +133,14 @@ func (srv *ModbusServer) handleRequest(conn net.Conn) error {
 				id_packet = 0
 			}
 			log.Printf("Src->: %s, Packet ID:%d\n", conn.RemoteAddr(), id_packet)
-
-			// fmt.Println(hex.Dump(request.data))
-			log.Println("****Request Dump****")
-			request.ModbusDump()
+			request.ModbusDump("****Request Dump****")
 			var answer *ModbusPacket
 			answer, err = request.HandlerRequest(srv.Data)
-			log.Println("****Answer Dump****")
-			answer.ModbusDump()
+			if err != nil {
+				log.Println("Error handle request:", err.Error())
+				break
+			}
+			answer.ModbusDump("****Answer Dump****")
 			conn.Write(answer.Data)
 		}
 	}
