@@ -88,9 +88,8 @@ func (mp *ModbusPacket) Crc16Check() bool {
 }
 
 // Print Modbus Packet dump
-func (mp *ModbusPacket) ModbusDump() {
-	fmt.Printf("\nDump Modbus Packet\n")
-
+func (mp *ModbusPacket) ModbusDump(msg ...string) {
+	fmt.Printf("\n%s\n", msg)
 	fmt.Printf("Packet length: \t\t\t%d\n", mp.Length)
 	fmt.Printf("Slave addr: \t\t\t%x\n", mp.GetAddr())
 	fmt.Printf("Code function: \t\t\t%s(0x%x)\n", mp.GetFC(), byte(mp.GetFC()))
