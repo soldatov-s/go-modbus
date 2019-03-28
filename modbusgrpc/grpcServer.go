@@ -89,7 +89,7 @@ func (s *ModbusService) PresetMultipleRegisters(ctx context.Context, req *Modbus
 	}
 
 	// Write holding registers to ModbusData
-	err := s.Data.PresetMultipleRegisters(uint16(req.Addr), req_int16)
+	err := s.Data.PresetMultipleRegisters(uint16(req.Addr), req_int16...)
 	if err != nil {
 		return nil, err
 	}
@@ -112,7 +112,7 @@ func (s *ModbusService) PresetMultipleRegisters(ctx context.Context, req *Modbus
 func (s *ModbusService) ForceMultipleCoils(ctx context.Context, req *ModbusWriteBitsRequest) (*BitResponse, error) {
 
 	// Write coils to ModbusData
-	err := s.Data.ForceMultipleCoils(uint16(req.Addr), req.Data)
+	err := s.Data.ForceMultipleCoils(uint16(req.Addr), req.Data...)
 	if err != nil {
 		return nil, err
 	}
