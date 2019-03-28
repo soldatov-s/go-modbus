@@ -20,12 +20,8 @@ type ModbusClient struct {
 // NewClient function initializate new instance of ModbusClient
 func NewClient(port, host string, mbprotocol ModbusTypeProtocol) (*ModbusClient, error) {
 	var err error
-	mc := new(ModbusClient)
-	mc.Host = host
-	mc.Port = port
-
+	mc :=&ModbusClient(Host: host, Port: port) 
 	mc.Conn, err = net.Dial("tcp", mc.String())
-
 	return mc, err
 }
 
