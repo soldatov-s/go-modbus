@@ -37,6 +37,7 @@ func TestCrc16(t *testing.T) {
 func BenchmarkCrc16(b *testing.B) {
     for i := 0; i < b.N; i++ {
         crc := Crc16([]byte{0x1, 0x2, 0x3, 0x4, 0x5})
+	fmt.Println(crc)
     }
 }
 
