@@ -78,7 +78,7 @@ func (rest *ModbusRest) hndlCoils(w http.ResponseWriter, r *http.Request) {
 	case "POST":
 		var req ModbusWriteBoolReq
 		_ = json.NewDecoder(r.Body).Decode(&req)
-		rest.Data.ForceMultipleCoils(req.Addr, req.Data)
+		rest.Data.ForceMultipleCoils(req.Addr, req.Data...)
 		addr = req.Addr
 		cnt = uint16(len(req.Data))				
 	case "GET":
@@ -131,7 +131,7 @@ func (rest *ModbusRest) hndlHoldReg(w http.ResponseWriter, r *http.Request) {
 	case "POST":
 		var req ModbusWriteRegReq
 		_ = json.NewDecoder(r.Body).Decode(&req)
-		rest.Data.PresetMultipleRegisters(req.Addr, req.Data)
+		rest.Data.PresetMultipleRegisters(req.Addr, req.Data...)
 		addr = req.Addr
 		cnt = uint16(len(req.Data))
 		
