@@ -47,6 +47,32 @@ func (fc ModbusFunctionCode) String() string {
 	}
 }
 
+func (fc ModbusFunctionCode) Length(isReq bool) int {
+	isError := bool(byte(fc)&byte(0x80) != 0)
+	if isError {
+		return 1
+	}
+	// ReadRegs/ReadIns - 2 + 2; Answer - 1 + data_len
+	// WriteRegs/WriteOuts - 2 + 2 + 1 + data_len; Answer - 2 + 2
+	// WriteReg/WriteOut - 2 + 2; Answer - 2 + 2
+	switch fc {
+	case ReadCoilStatus, ReadDescreteInputs, ReadHoldingRegisters:
+		if isReq {
+			return 4
+		} 
+		return 1
+	case ForceMultipleCoils, PresetMultipleRegisters:
+		if !isReq {
+			return 5
+		}
+		return 4
+	case PresetSingleRegister, ForceSingleCoil:
+		return 4
+	default:		
+		return 0
+	}
+}
+
 // Handler of the function by it code
 func (fc ModbusFunctionCode) Handler(mp *ModbusPacket, md *ModbusData) (*ModbusPacket, error) {
 	switch fc {
@@ -71,52 +97,28 @@ func (fc ModbusFunctionCode) Handler(mp *ModbusPacket, md *ModbusData) (*ModbusP
 	}
 }
 
+func boolCntToByteCnt(cnt uint16) uint16 {
+	q, r := par2/8, par2%8
+	if r > 0 {
+		q++
+	}
+	return q
+}
+
 // Build ModbusPacket
 func buildPacket(TypeProtocol ModbusTypeProtocol, dev_id byte, fc ModbusFunctionCode,
 	par1, par2 uint16, data ...byte) *ModbusPacket {
 	isError := bool(byte(fc)&byte(0x80) != 0)
-	mp := new(ModbusPacket)
-	mp.TypeProtocol = TypeProtocol
-	mp.Length = 4 // dev_id, fc, crc
-
-	// ReadRegs/ReadIns - 2 + 2; Answer - 1 + data_len
-	// WriteRegs/WriteOuts - 2 + 2 + 1 + data_len; Answer - 2 + 2
-	// WriteReg/WriteOut - 2 + 2; Answer - 2 + 2
-
+	mp := &ModbusPacket{TypeProtocol: TypeProtocol}
 	// FC with parameters length
-	switch fc {
-	case ReadCoilStatus, ReadDescreteInputs, ReadHoldingRegisters:
-		// data == nil is a request
-		if data == nil {
-			mp.Length += 4
-		} else {
-			mp.Length += 1
-		}
-	case ForceMultipleCoils, PresetMultipleRegisters:
-		// data != nil is a request
-		if data != nil {
-			mp.Length += 5
-		} else {
-			mp.Length += 4
-		}
-	case PresetSingleRegister, ForceSingleCoil:
-		mp.Length += 4
-	default:
-		if isError {
-			mp.Length += 1
-		}
-		mp.Length = 0
-	}
+	mp.Length += fc.Length(bool(data == nil))
 	if mp.Length == 0 {
 		return nil
 	}
+	mp.Length += 4 // dev_id, fc, crc
 	// Data length
 	if (fc == ReadCoilStatus || fc == ReadDescreteInputs) && data == nil {
-		q, r := par2/8, par2%8
-		if r > 0 {
-			q++
-		}
-		mp.Length += int(q)
+		mp.Length += int(boolCntToByteCnt(par2))
 	} else {
 		mp.Length += len(data)
 	}
@@ -218,12 +220,7 @@ func PresetMultipleRegistersHndl(mp *ModbusPacket, md *ModbusData) (*ModbusPacke
 
 // Convert bool array to byte array
 func boolArrToByteArr(data []bool) []byte {
-	q, r := len(data)/8, len(data)%8
-	if r > 0 {
-		q++
-	}
-
-	byte_data := make([]byte, q)
+	byte_data := make([]byte, boolCntToByteCnt(len(data)))
 	shift := 0
 	for i, value := range data {
 		if value {
