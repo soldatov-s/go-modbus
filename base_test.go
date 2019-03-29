@@ -22,7 +22,7 @@ func TestModbusBaseServer_String(t *testing.T) {
 
 func TestModbusBaseClient_String(t *testing.T) {
 	test_str := "test:504"
-	srv := &ModbusBaseServer{Host: "test", Port: "504"}
+	srv := &ModbusBaseClient{Host: "test", Port: "504"}
 	s := fmt.Sprintf("%s", srv)
 	r := strings.Compare(s, test_str)
 	if r != 0 {
