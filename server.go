@@ -27,12 +27,13 @@ type ModbusServer struct {
 
 // NewServer function initializate new instance of ModbusServer
 func NewServer(host, port string, mbprotocol ModbusTypeProtocol, md *ModbusData) *ModbusServer {
-	srv := &ModbusServer{Host: host, 
-			     Port: port, 
-			     MTP: mbprotocol, 
-			     Data: md,
-			     done: make(chan struct{}),
-			     exited: make(chan struct{}),}
+	srv := &ModbusServer{
+		MTP:    mbprotocol,
+		done:   make(chan struct{}),
+		exited: make(chan struct{})}
+	srv.Port = port
+	srv.Host = host
+	srv.Data = md
 	return srv
 }
 

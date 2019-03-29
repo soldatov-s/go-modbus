@@ -33,7 +33,7 @@ func main() {
 
 	md := new(modbus.ModbusData)
 	md.Init(*coils_cnt, *discrete_inputs_cnt, *holding_reg_cnt, *input_reg_cnt)
-	md.PresetMultipleRegisters(0, []uint16{0x01, 0x02, 0x03, 0x04, 0x05})
+	md.PresetMultipleRegisters(0, []uint16{0x01, 0x02, 0x03, 0x04, 0x05}...)
 
 	srv := modbus.NewServer(*host, *port,
 		modbus.StringToModbusTypeProtocol(*mbprotocol), md)

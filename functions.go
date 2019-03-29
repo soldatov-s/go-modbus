@@ -7,6 +7,7 @@ package modbus
 import (
 	"encoding/binary"
 	"errors"
+	"fmt"
 )
 
 // Type of Modbus function
@@ -56,10 +57,10 @@ func (fc ModbusFunctionCode) Length(isReq bool) int {
 	// WriteRegs/WriteOuts - 2 + 2 + 1 + data_len; Answer - 2 + 2
 	// WriteReg/WriteOut - 2 + 2; Answer - 2 + 2
 	switch fc {
-	case ReadCoilStatus, ReadDescreteInputs, ReadHoldingRegisters:
+	case ReadCoilStatus, ReadDescreteInputs, ReadHoldingRegisters, ReadInputRegisters:
 		if isReq {
 			return 4
-		} 
+		}
 		return 1
 	case ForceMultipleCoils, PresetMultipleRegisters:
 		if !isReq {
@@ -68,7 +69,7 @@ func (fc ModbusFunctionCode) Length(isReq bool) int {
 		return 4
 	case PresetSingleRegister, ForceSingleCoil:
 		return 4
-	default:		
+	default:
 		return 0
 	}
 }
@@ -98,7 +99,7 @@ func (fc ModbusFunctionCode) Handler(mp *ModbusPacket, md *ModbusData) (*ModbusP
 }
 
 func boolCntToByteCnt(cnt uint16) uint16 {
-	q, r := par2/8, par2%8
+	q, r := cnt/8, cnt%8
 	if r > 0 {
 		q++
 	}
@@ -106,12 +107,16 @@ func boolCntToByteCnt(cnt uint16) uint16 {
 }
 
 // Build ModbusPacket
-func buildPacket(TypeProtocol ModbusTypeProtocol, dev_id byte, fc ModbusFunctionCode,
-	par1, par2 uint16, data ...byte) *ModbusPacket {
+func buildPacket(isReq bool,
+	TypeProtocol ModbusTypeProtocol,
+	dev_id byte,
+	fc ModbusFunctionCode,
+	par1, par2 uint16,
+	data ...byte) *ModbusPacket {
 	isError := bool(byte(fc)&byte(0x80) != 0)
 	mp := &ModbusPacket{TypeProtocol: TypeProtocol}
 	// FC with parameters length
-	mp.Length += fc.Length(bool(data == nil))
+	mp.Length += fc.Length(isReq)
 	if mp.Length == 0 {
 		return nil
 	}
@@ -125,12 +130,20 @@ func buildPacket(TypeProtocol ModbusTypeProtocol, dev_id byte, fc ModbusFunction
 	mp.Data = make([]byte, 2, mp.Length)
 	mp.Data[0] = dev_id
 	mp.Data[1] = byte(fc)
-	binary.BigEndian.PutUint16(mp.Data[2:3], par1)
+	tmp := make([]byte, 2)
 	if !isError {
-		binary.BigEndian.PutUint16(mp.Data[4:6], par2)
-		if data != nil {
-			mp.Data = append(mp.Data, data...)
+		if !isReq {
+			mp.Data = append(mp.Data, []byte{byte(len(data))}...)
+		} else {
+			binary.BigEndian.PutUint16(tmp, par1)
+			mp.Data = append(mp.Data, tmp...)
+			binary.BigEndian.PutUint16(tmp, par2)
+			mp.Data = append(mp.Data, tmp...)
+			if data != nil {
+				mp.Data = append(mp.Data, []byte{byte(len(data))}...)
+			}
 		}
+		mp.Data = append(mp.Data, data...)
 	}
 	AppendCrc16(&mp.Data)
 
@@ -139,14 +152,14 @@ func buildPacket(TypeProtocol ModbusTypeProtocol, dev_id byte, fc ModbusFunction
 
 // Build answer for request
 func buildAnswer(req *ModbusPacket, fc ModbusFunctionCode, data ...byte) *ModbusPacket {
-	par1 := binary.BigEndian.Uint16(req.Data[2:3])
+	par1 := binary.BigEndian.Uint16(req.Data[2:4])
 	par2 := binary.BigEndian.Uint16(req.Data[4:6])
-	return buildPacket(req.TypeProtocol, req.GetAddr(), req.GetFC(), par1, par2, data...)
+	return buildPacket(false, req.TypeProtocol, req.GetAddr(), req.GetFC(), par1, par2, data...)
 }
 
 // Error handler, builds ModbusPacket for error answer
 func buildErrAnswer(req *ModbusPacket, errCode uint16) *ModbusPacket {
-	return buildPacket(req.TypeProtocol, req.GetAddr(), req.GetFC()|ModbusFunctionCode(0x80), errCode, 0)
+	return buildPacket(false, req.TypeProtocol, req.GetAddr(), req.GetFC()|ModbusFunctionCode(0x80), errCode, 0)
 }
 
 // Convert word array to byte array
@@ -198,7 +211,7 @@ func PresetSingleRegisterHndl(mp *ModbusPacket, md *ModbusData) (*ModbusPacket, 
 
 // Convert byte array to word array
 func byteArrToWordArr(data []byte) []uint16 {
-	reg_data := make([]uint16, len(data)/2)
+	reg_data := make([]uint16, 0, len(data)/2)
 	for i := uint16(0); i < uint16(len(data)/2); i++ {
 		reg_data = append(reg_data, binary.BigEndian.Uint16(data[2*i:2*i+2]))
 	}
@@ -209,7 +222,6 @@ func byteArrToWordArr(data []byte) []uint16 {
 func PresetMultipleRegistersHndl(mp *ModbusPacket, md *ModbusData) (*ModbusPacket, error) {
 	addr := binary.BigEndian.Uint16(mp.Data[2:4])
 	cnt := binary.BigEndian.Uint16(mp.Data[4:6])
-
 	// Set values in ModbusData
 	err := md.PresetMultipleRegisters(addr, byteArrToWordArr(mp.Data[7:7+cnt*2])...)
 	if err != nil {
@@ -220,7 +232,7 @@ func PresetMultipleRegistersHndl(mp *ModbusPacket, md *ModbusData) (*ModbusPacke
 
 // Convert bool array to byte array
 func boolArrToByteArr(data []bool) []byte {
-	byte_data := make([]byte, boolCntToByteCnt(len(data)))
+	byte_data := make([]byte, boolCntToByteCnt(uint16(len(data))))
 	shift := 0
 	for i, value := range data {
 		if value {
@@ -275,7 +287,8 @@ func ForceSingleCoilHndl(mp *ModbusPacket, md *ModbusData) (*ModbusPacket, error
 
 // Convert byte array to bool array
 func byteArrToBoolArr(data []byte, cnt uint16) []bool {
-	bool_data := make([]bool, cnt)
+	fmt.Println(data, cnt)
+	bool_data := make([]bool, 0, cnt)
 	j := uint16(0)
 	for _, value := range data {
 		for k := uint(0); k < 8; k++ {
@@ -299,7 +312,8 @@ func ForceMultipleCoilsHndl(mp *ModbusPacket, md *ModbusData) (*ModbusPacket, er
 	cnt_byte := mp.Data[6]
 
 	// Set values in ModbusData
-	err := md.ForceMultipleCoils(addr, byteArrToBoolArr(mp.Data[8:8+cnt_byte], cnt)...)
+	fmt.Println(byteArrToBoolArr(mp.Data[7:7+cnt_byte], cnt))
+	err := md.ForceMultipleCoils(addr, byteArrToBoolArr(mp.Data[7:7+cnt_byte], cnt)...)
 	if err != nil {
 		return buildErrAnswer(mp, 2), err
 	}

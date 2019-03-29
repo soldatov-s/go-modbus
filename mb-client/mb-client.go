@@ -30,7 +30,7 @@ func main() {
 	flag.Parse()
 
 	cl, err = modbus.NewClient(*host, *port,
-		modbus.StringToModbusTypeProtocol(*mbprotocol))
+		modbus.StringToModbusTypeProtocol(*mbprotocol), 1)
 
 	if err != nil {
 		fmt.Println(err)
@@ -40,7 +40,7 @@ func main() {
 	request := &modbus.ModbusPacket{
 		Data:         []byte{0x1, 0x3, 0x0, 0x0, 0x0, 0xA, 0xCD, 0xC5},
 		Length:       8,
-		TypeProtocol: cl.MTP}
+		TypeProtocol: cl.TypeProtocol}
 
 	request.ModbusDump()
 

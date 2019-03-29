@@ -22,9 +22,9 @@ type ModbusService struct {
 	ln net.Listener // Listener
 }
 
-func int16ArrToInt32Arr(data []int16) []int32{
+func uint16ArrToInt32Arr(data []uint16) []int32 {
 	data_int32 := make([]int32, 0, len(data))
-	for _, a := range answer {
+	for _, a := range data {
 		data_int32 = append(data_int32, int32(a))
 	}
 	return data_int32
@@ -37,7 +37,7 @@ func (s *ModbusService) ReadHoldingRegisters(ctx context.Context, req *ModbusReq
 	if err != nil {
 		return nil, err
 	}
-	return &RegisterResponse{Data: int16ArrToInt32Arr(answer)}, nil
+	return &RegisterResponse{Data: uint16ArrToInt32Arr(answer)}, nil
 }
 
 // ReadInputRegisters handel request to gRPC server
@@ -47,7 +47,7 @@ func (s *ModbusService) ReadInputRegisters(ctx context.Context, req *ModbusReque
 	if err != nil {
 		return nil, err
 	}
-	return &RegisterResponse{Data: int16ArrToInt32Arr(answer)}, nil
+	return &RegisterResponse{Data: uint16ArrToInt32Arr(answer)}, nil
 }
 
 // ReadCoilStatus handel request to gRPC server
@@ -70,10 +70,10 @@ func (s *ModbusService) ReadDescreteInputs(ctx context.Context, req *ModbusReque
 	return &BitResponse{Data: answer}, nil
 }
 
-func int32ArrToInt16Arr(data []int32) []int16{
-	data_int16 := make([]int16, 0, len(data))
-	for _, a := range answer {
-		data_int16 = append(data_int16, int16(a))
+func int32ArrToUInt16Arr(data []int32) []uint16 {
+	data_int16 := make([]uint16, 0, len(data))
+	for _, a := range data {
+		data_int16 = append(data_int16, uint16(a))
 	}
 	return data_int16
 }
@@ -81,12 +81,12 @@ func int32ArrToInt16Arr(data []int32) []int16{
 // PresetMultipleRegisters handel request to gRPC server
 func (s *ModbusService) PresetMultipleRegisters(ctx context.Context, req *ModbusWriteRegistersRequest) (*RegisterResponse, error) {
 	// Write holding registers to ModbusData
-	err := s.Data.PresetMultipleRegisters(uint16(req.Addr), int32ArrToInt16Arr(req.Data)...)
+	err := s.Data.PresetMultipleRegisters(uint16(req.Addr), int32ArrToUInt16Arr(req.Data)...)
 	if err != nil {
 		return nil, err
 	}
 	// Read holding registers
-	return s.ReadHoldingRegisters(ctx, &ModbusRequest{Addr: req.Addr, Cnt: len(req.Data)}
+	return s.ReadHoldingRegisters(ctx, &ModbusRequest{Addr: req.Addr, Cnt: int32(len(req.Data))})
 }
 
 // ForceMultipleCoils handel request to gRPC server
@@ -97,7 +97,7 @@ func (s *ModbusService) ForceMultipleCoils(ctx context.Context, req *ModbusWrite
 		return nil, err
 	}
 	// Read coils
-	return s.ReadCoilStatus(ctx, &ModbusRequest{Addr: req.Addr, Cnt: len(req.Data)}
+	return s.ReadCoilStatus(ctx, &ModbusRequest{Addr: req.Addr, Cnt: int32(len(req.Data))})
 }
 
 func NewgRPCService(host, port string, md *ModbusData) *ModbusService {

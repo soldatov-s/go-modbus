@@ -22,7 +22,9 @@ type ModbusgRPCClient struct {
 
 func NewgRPCClient(port, host string) *ModbusgRPCClient {
 	var err error
-	cl := &ModbusgRPCClient{Port: port, Host: host}
+	cl := new(ModbusgRPCClient)
+	cl.Port = port
+	cl.Host = host
 	cl.Conn, err = grpc.Dial(cl.String(), grpc.WithInsecure())
 	if err != nil {
 		log.Fatalf("Can not connected: %v", err)

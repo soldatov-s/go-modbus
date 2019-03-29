@@ -5,6 +5,7 @@
 package modbus
 
 import (
+	"sync"
 	"testing"
 )
 
@@ -39,55 +40,53 @@ func TestModbusData_checkOutside(t *testing.T) {
 }
 
 func TestModbusData_PresetMultipleRegisters(t *testing.T) {
-	test_addr := 5
+	test_addr := uint16(5)
 	test_data := []uint16{10, 20, 30}
-	md := &ModbusData{holding_reg: make([]uint16, 10), mu_holding_regs = &sync.Mutex{}}
+	md := &ModbusData{holding_reg: make([]uint16, 10), mu_holding_regs: &sync.Mutex{}}
 	md.PresetMultipleRegisters(test_addr, test_data...)
 	for i, v := range test_data {
-		if test_data[i] != md.holding_reg[test_addr+i] {
-			t.Error("Expected", test_data[i], "got", md.holding_reg[test_addr+i])
+		if v != md.holding_reg[test_addr+uint16(i)] {
+			t.Error("Expected", test_data[i], "got", md.holding_reg[test_addr+uint16(i)])
 		}
 	}
 }
 
 func TestModbusData_ForceMultipleCoils(t *testing.T) {
-	test_addr := 5
+	test_addr := uint16(5)
 	test_data := []bool{true, false, true}
-	md := &ModbusData{coils: make([]bool, 10), mu_coils = &sync.Mutex{}}
-	md.PresetMultipleRegisters(test_addr, test_data...)
+	md := &ModbusData{coils: make([]bool, 10), mu_coils: &sync.Mutex{}}
+	md.ForceMultipleCoils(test_addr, test_data...)
 	for i, v := range test_data {
-		if test_data[i] != md.mu_coils[test_addr+i] {
-			t.Error("Expected", test_data[i], "got", md.holding_reg[test_addr+i])
+		if v != md.coils[test_addr+uint16(i)] {
+			t.Error("Expected", test_data[i], "got", md.holding_reg[test_addr+uint16(i)])
 		}
 	}
 }
 
 func TestModbusData_ReadHoldingRegisters(t *testing.T) {
-	test_addr := 0
+	test_addr := uint16(0)
 	test_data := []uint16{10, 20, 30}
-	test_cnt := 3
+	test_cnt := uint16(3)
 	md := new(ModbusData)
 	md.holding_reg = test_data
-	res_data := md.ReadHoldingRegisters(test_addr, test_cnt)
+	res_data, _ := md.ReadHoldingRegisters(test_addr, test_cnt)
 	for i, v := range test_data {
-		if test_data[i] != res_data[i] {
+		if v != res_data[i] {
 			t.Error("Expected", test_data[i], "got", res_data[i])
 		}
 	}
 }
 
 func TestModbusData_ReadCoilStatus(t *testing.T) {
-	test_addr := 0
+	test_addr := uint16(0)
 	test_data := []bool{true, false, true}
-	test_cnt := 3
+	test_cnt := uint16(3)
 	md := new(ModbusData)
-	md.mu_coils = test_data
-	res_data := md.ReadCoilStatus(test_addr, test_cnt)
+	md.coils = test_data
+	res_data, _ := md.ReadCoilStatus(test_addr, test_cnt)
 	for i, v := range test_data {
-		if test_data[i] != res_data[i] {
+		if v != res_data[i] {
 			t.Error("Expected", test_data[i], "got", res_data[i])
 		}
 	}
 }
-
-
