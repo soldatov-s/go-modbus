@@ -29,7 +29,7 @@ func (mp *ModbusPacket) GetAddr() byte {
 
 // Get function code field from packet
 func (mp *ModbusPacket) GetFC() ModbusFunctionCode {
-	return ModbusFunctionCode(mp.Data[1+mp.TypeProtocol.Offset()])
+	return ModbusFunctionCode(mp.GetData(1))
 }
 
 // Handler request by function code
@@ -38,15 +38,17 @@ func (mp *ModbusPacket) HandlerRequest(md *ModbusData) (*ModbusPacket, error) {
 }
 
 // Get body Modbus request from packet
-func (mp *ModbusPacket) GetData() []byte {
-	if mp.Length == 0 {
+func (mp *ModbusPacket) GetData(val ...int) []byte {
+	if mp.Length == 0 || mp.Data == nil || val == nil{
 		return nil
 	}
-	if mp.TypeProtocol == ModbusTCP {
-		return mp.Data[mp.TypeProtocol.Offset() + 2:]
+	start := val[0]
+	if len(val) == 1 {
+		return mp.Data[mp.TypeProtocol.Offset() + start]
 	}
-	if mp.TypeProtocol == ModbusRTUviaTCP {
-		return mp.Data[mp.TypeProtocol.Offset() + 2 : mp.Length-2]
+	if len(val) == 2 {
+		end := val[1]
+		return mp.Data[mp.TypeProtocol.Offset() + start : end]	
 	}
 	return nil
 }
@@ -56,7 +58,7 @@ func (mp *ModbusPacket) GetCrc() uint16 {
 	if mp.Length == 0 || mp.TypeProtocol == ModbusTCP {
 		return 0
 	}
-	return binary.BigEndian.Uint16(mp.Data[mp.Length-2 :])
+	return binary.BigEndian.Uint16(mp.GetData(mp.Length-2, mp.Length))
 }
 
 // Recalculate and check CRC of packet
