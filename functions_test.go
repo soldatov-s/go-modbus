@@ -102,7 +102,7 @@ var testsbuildPacket = []testbuildPacketpair{
 func TestbuildPacket(t *testing.T) {
 	for _, pair := range testsbuildPacket {
 		mp := buildPacket(pair.isReq, pair.TypeProtocol, pair.dev_id, pair.fc, pair.par1, pair.par2)
-		for i, v := range mp.Data {
+		for i, v := range mp.GetData(0, len(mp.Data)) {
 			if v != pair.data[i] {
 				t.Error(
 					"For", pair,
@@ -144,7 +144,7 @@ func TestReadHoldingRegistersHndl(t *testing.T) {
 	req := buildPacket(true, ModbusRTUviaTCP, 1, ReadHoldingRegisters, 0, 0x5)
 	answ, _ := ReadHoldingRegistersHndl(req, md)
 	for i, v := range test_data {
-		res := binary.BigEndian.Uint16(answ.Data[3+2*i : 5+2*i])
+		res := binary.BigEndian.Uint16(answ.GetData(3+2*i, 5+2*i))
 		if v != res {
 			t.Error("Expected ", v, "got ", res)
 		}
@@ -170,7 +170,7 @@ func TestReadInputRegistersHndl(t *testing.T) {
 	req := buildPacket(true, ModbusRTUviaTCP, 1, ReadInputRegisters, 0, 0x5)
 	answ, _ := ReadInputRegistersHndl(req, md)
 	for i, v := range test_data {
-		res := binary.BigEndian.Uint16(answ.Data[3+2*i : 5+2*i])
+		res := binary.BigEndian.Uint16(answ.GetData(3+2*i, 5+2*i))
 		if v != res {
 			t.Error("Expected ", v, "got ", res)
 		}
@@ -183,7 +183,7 @@ func TestReadCoilStatusHndll(t *testing.T) {
 	md.ForceMultipleCoils(0, test_data...)
 	req := buildPacket(true, ModbusRTUviaTCP, 1, ReadCoilStatus, 0, 0x5)
 	answ, _ := ReadCoilStatusHndl(req, md)
-	cnt_byte := uint16(answ.Data[2])
+	cnt_byte := uint16(answ.GetData(2))
 	bool_arr := byteArrToBoolArr(answ.Data[3:3+cnt_byte], uint16(len(test_data)))
 	for i, v := range test_data {
 		if bool_arr[i] != v {
@@ -210,8 +210,8 @@ func TestReadDescreteInputsHndl(t *testing.T) {
 	md.ForceMultipleDescreteInputs(0, test_data...)
 	req := buildPacket(true, ModbusRTUviaTCP, 1, ReadDescreteInputs, 0, 0x5)
 	answ, _ := ReadDescreteInputsHndl(req, md)
-	cnt_byte := uint16(answ.Data[2])
-	bool_arr := byteArrToBoolArr(answ.Data[3:3+cnt_byte], uint16(len(test_data)))
+	cnt_byte := uint16(answ.GetData(2))
+	bool_arr := byteArrToBoolArr(answ.GetData(3,3+cnt_byte), uint16(len(test_data)))
 	for i, v := range test_data {
 		if bool_arr[i] != v {
 			t.Error("Expected ", v, "got ", bool_arr[i])
