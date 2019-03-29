@@ -40,8 +40,8 @@ type testModbusTypeProtocolpair struct {
 }
 
 var testsModbusTypeProtocol = []testModbusTypeProtocolpair{
-	{ModbusTCP, "ModbusTCP", 260, 0},
-	{ModbusRTUviaTCP, "ModbusRTUviaTCP", 256, 6},
+	{ModbusTCP, "ModbusTCP", 260, 6},
+	{ModbusRTUviaTCP, "ModbusRTUviaTCP", 256, 0},
 }
 
 func TestModbusTypeProtocol_String(t *testing.T) {
@@ -63,7 +63,7 @@ func TestModbusTypeProtocol_MaxSize(t *testing.T) {
 func TestModbusTypeProtocol_Offset(t *testing.T) {
 	for _, pair := range testsModbusTypeProtocol {
 		if pair.TypeProtocol.Offset() != pair.offset {
-			t.Error("Expected ", pair.maxSize, "got ", pair.TypeProtocol.Offset())
+			t.Error("Expected ", pair.offset, "got ", pair.TypeProtocol.Offset())
 		}
 	}
 }
