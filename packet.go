@@ -48,6 +48,7 @@ func (mp *ModbusPacket) GetData() []byte {
 	if mp.TypeProtocol == ModbusRTUviaTCP {
 		return mp.Data[mp.TypeProtocol.Offset() + 2 : mp.Length-2]
 	}
+	return nil
 }
 
 // Get CRC field from packet
