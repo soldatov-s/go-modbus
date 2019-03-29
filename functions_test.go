@@ -207,8 +207,8 @@ func TestPresetSingleRegisterHndl(t *testing.T) {
 }
 
 func TestForceSingleCoilHndl(t *testing.T) {
-	test_data := uint16(0x01)
-	test_addr := uint16(0xFF00)
+	test_data := uint16(0xFF00)
+	test_addr := uint16(0x0)
 	md := &ModbusData{coils: make([]bool, 10), mu_coils: &sync.Mutex{}}
 	req := buildPacket(true, ModbusRTUviaTCP, 1, ForceSingleCoil, test_addr, test_data)
 	ForceSingleCoilHndl(req, md)
