@@ -10,6 +10,30 @@ import (
 	"testing"
 )
 
+type testModbusFunctionCodeStringpair struct {
+	fc   ModbusFunctionCode
+	name string
+}
+
+var testsModbusFunctionCodeString = []testModbusFunctionCodeStringpair{
+	{ReadCoilStatus, "ReadCoilStatus"},
+	{ReadDescreteInputs, "ReadDescreteInputs"},
+	{ReadHoldingRegisters, "ReadHoldingRegisters"},
+	{ReadInputRegisters, "ReadInputRegisters"},
+	{ForceSingleCoil, "ForceSingleCoil"},
+	{PresetSingleRegister, "PresetSingleRegister"},
+	{ForceMultipleCoils, "ForceMultipleCoils"},
+	{PresetMultipleRegisters, "PresetMultipleRegisters"},
+}
+
+func TestModbusFunctionCode_String(t *testing.T) {
+	for _, pair := range testsModbusFunctionCodeString {
+		if pair.fc.String() != pair.name {
+			t.Error("Expected ", pair.name, "got ", pair.fc.String())
+		}
+	}
+}
+
 func TestboolCntToByteCnt(t *testing.T) {
 	test_data := uint16(9)
 	res := boolCntToByteCnt(test_data)
