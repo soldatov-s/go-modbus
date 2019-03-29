@@ -275,7 +275,7 @@ func ForceSingleCoilHndl(mp *ModbusPacket, md *ModbusData) (*ModbusPacket, error
 
 	// Set values in ModbusData
 	b := binary.BigEndian.Uint16(mp.Data[4:6])
-	if b != 0xFF00 {
+	if b == 0xFF00 {
 		b = 1
 	}
 	err := md.ForceSingleCoil(addr, bool((b&1) == 1))
