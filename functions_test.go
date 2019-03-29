@@ -12,9 +12,9 @@ import (
 )
 
 func TestboolCntToByteCnt(t *testing.T) {
-	test_data := 9
+	test_data := uint16(9)
 	res := boolCntToByteCnt(test_data)
-	v := 2
+	v := uint16(2)
 	if v != res {
 		t.Error("Expected ", v, "got ", res)
 	}
@@ -23,9 +23,9 @@ func TestboolCntToByteCnt(t *testing.T) {
 func TestboolArrToByteArr(t *testing.T) {
 	test_data := []bool{true, true, false, false, true}
 	res := boolArrToByteArr(test_data)
-	v := 19
-	if v != res {
-		t.Error("Expected ", v, "got ", res)
+	v := []byte{19}
+	if v[0] != res[0] {
+		t.Error("Expected ", v[0], "got ", res[0])
 	}
 }
 
@@ -54,7 +54,7 @@ func TestbyteArrToBoolArr(t *testing.T) {
 
 func TestbyteArrToWordArr(t *testing.T) {
 	test_data := []byte{0x0, 0x01, 0x0, 0x02, 0x0, 0x03, 0x0, 0x04}
-	res := boolArrToByteArr(test_data)
+	res := byteArrToWordArr(test_data)
 	for i, v := range res {
 		t := binary.BigEndian.Uint16(test_data[2*i : 2+2*i])
 		if v != t {
