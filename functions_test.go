@@ -35,7 +35,7 @@ func TestwordArrToByteArr(t *testing.T) {
 	for i, v := range test_data {
 		t := binary.BigEndian.Uint16(res[2*i : 2+2*i])
 		if v != t {
-			t.Error("Expected ", v, "got ", t)
+			t.Error("Expected ", v, "got ", int(t))
 		}
 	}
 }
@@ -58,7 +58,7 @@ func TestbyteArrToWordArr(t *testing.T) {
 	for i, v := range res {
 		t := binary.BigEndian.Uint16(test_data[2*i : 2+2*i])
 		if v != t {
-			t.Error("Expected ", t, "got ", v)
+			t.Error("Expected ", int(t), "got ", v)
 		}
 	}
 }
