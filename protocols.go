@@ -36,7 +36,7 @@ func (p ModbusTypeProtocol) MaxSize() int {
 // PDU offest
 func (p ModbusTypeProtocol) Offset() int {
 	if p == ModbusTCP {
-		return 4
+		return 6
 	}
 	return 0
 }
