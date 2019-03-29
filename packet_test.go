@@ -100,8 +100,8 @@ func TestModbusPacket_GetData(t *testing.T) {
 	mp := &ModbusPacket{TypeProtocol: ModbusRTUviaTCP,
 		Data:   test_data,
 		Length: len(test_data)}
-	res := mp.GetData()
-	for i, v := range test_data[2:len(test_data)-2] {
+	res := mp.GetData(0, len(test_data))
+	for i, v := range test_data {
 		if res[i] != v {
 			t.Error("Expected", v, "got", res[i])
 		}
