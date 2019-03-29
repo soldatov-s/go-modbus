@@ -40,8 +40,8 @@ type testModbusTypeProtocolpair struct {
 }
 
 var testsModbusTypeProtocol = []testModbusTypeProtocolpair{
-	{ModbusTCP, "ModbusTCP", 260},
-	{ModbusRTUviaTCP, "ModbusRTUviaTCP", 256},
+	{ModbusTCP, "ModbusTCP", 260, 0},
+	{ModbusRTUviaTCP, "ModbusRTUviaTCP", 256, 6},
 }
 
 func TestModbusTypeProtocol_String(t *testing.T) {
