@@ -48,6 +48,7 @@ func (fc ModbusFunctionCode) String() string {
 	}
 }
 
+// Get FC parameters length
 func (fc ModbusFunctionCode) Length(isReq bool) int {
 	isError := bool(byte(fc)&byte(0x80) != 0)
 	if isError {
@@ -98,6 +99,7 @@ func (fc ModbusFunctionCode) Handler(mp *ModbusPacket, md *ModbusData) (*ModbusP
 	}
 }
 
+// Countes how many bytes we need to store bool array
 func boolCntToByteCnt(cnt uint16) uint16 {
 	q, r := cnt/8, cnt%8
 	if r > 0 {
@@ -115,7 +117,6 @@ func buildPacket(isReq bool,
 	data ...byte) *ModbusPacket {
 	isError := bool(byte(fc)&byte(0x80) != 0)
 	mp := &ModbusPacket{TypeProtocol: TypeProtocol}
-	// FC with parameters length
 	mp.Length += fc.Length(isReq)
 	if mp.Length == 0 {
 		return nil
