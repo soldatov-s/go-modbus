@@ -29,7 +29,7 @@ func (mp *ModbusPacket) GetAddr() byte {
 
 // Get function code field from packet
 func (mp *ModbusPacket) GetFC() ModbusFunctionCode {
-	return ModbusFunctionCode(mp.GetData(1))
+	return ModbusFunctionCode(mp.Data[mp.TypeProtocol.Offset()+1])
 }
 
 // Handler request by function code
@@ -38,19 +38,12 @@ func (mp *ModbusPacket) HandlerRequest(md *ModbusData) (*ModbusPacket, error) {
 }
 
 // Get body Modbus request from packet
-func (mp *ModbusPacket) GetData(val ...int) []byte {
-	if mp.Length == 0 || mp.Data == nil || val == nil{
+func (mp *ModbusPacket) GetData(start, end int) []byte {
+	if mp.Length == 0 || mp.Data == nil || start < 0 ||
+		end < start || end > len(mp.Data) {
 		return nil
 	}
-	start := val[0]
-	if len(val) == 1 {
-		return mp.Data[mp.TypeProtocol.Offset() + start]
-	}
-	if len(val) == 2 {
-		end := val[1]
-		return mp.Data[mp.TypeProtocol.Offset() + start : mp.TypeProtocol.Offset() + end]	
-	}
-	return nil
+	return mp.Data[mp.TypeProtocol.Offset()+start : mp.TypeProtocol.Offset()+end]
 }
 
 // Get CRC field from packet

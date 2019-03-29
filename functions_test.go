@@ -89,14 +89,14 @@ func TestbyteArrToWordArr(t *testing.T) {
 type testbuildPacketpair struct {
 	isReq        bool
 	TypeProtocol ModbusTypeProtocol
-	dev_id 	     byte
+	dev_id       byte
 	fc           ModbusFunctionCode
 	par1, par2   uint16
 	data         []byte
 }
 
 var testsbuildPacket = []testbuildPacketpair{
-	{true, ModbusRTUviaTCP,  1, ReadHoldingRegisters, 0x0, 0xA, []byte{0x1, 0x3, 0x0, 0x0, 0x0, 0xA, 0xCD, 0xC5}},
+	{true, ModbusRTUviaTCP, 1, ReadHoldingRegisters, 0x0, 0xA, []byte{0x1, 0x3, 0x0, 0x0, 0x0, 0xA, 0xCD, 0xC5}},
 }
 
 func TestbuildPacket(t *testing.T) {
@@ -183,7 +183,7 @@ func TestReadCoilStatusHndll(t *testing.T) {
 	md.ForceMultipleCoils(0, test_data...)
 	req := buildPacket(true, ModbusRTUviaTCP, 1, ReadCoilStatus, 0, 0x5)
 	answ, _ := ReadCoilStatusHndl(req, md)
-	cnt_byte := uint16(answ.GetData(2))
+	cnt_byte := uint16(answ.Data[answ.TypeProtocol.Offset()+2])
 	bool_arr := byteArrToBoolArr(answ.Data[3:3+cnt_byte], uint16(len(test_data)))
 	for i, v := range test_data {
 		if bool_arr[i] != v {
@@ -210,8 +210,8 @@ func TestReadDescreteInputsHndl(t *testing.T) {
 	md.ForceMultipleDescreteInputs(0, test_data...)
 	req := buildPacket(true, ModbusRTUviaTCP, 1, ReadDescreteInputs, 0, 0x5)
 	answ, _ := ReadDescreteInputsHndl(req, md)
-	cnt_byte := uint16(answ.GetData(2))
-	bool_arr := byteArrToBoolArr(answ.GetData(3,3+cnt_byte), uint16(len(test_data)))
+	cnt_byte := uint16(answ.Data[answ.TypeProtocol.Offset()+2])
+	bool_arr := byteArrToBoolArr(answ.GetData(3, 3+int(cnt_byte)), uint16(len(test_data)))
 	for i, v := range test_data {
 		if bool_arr[i] != v {
 			t.Error("Expected ", v, "got ", bool_arr[i])
