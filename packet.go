@@ -37,14 +37,6 @@ func (mp *ModbusPacket) HandlerRequest(md *ModbusData) (*ModbusPacket, error) {
 	return mp.GetFC().Handler(mp, md)
 }
 
-// Get prefix (device address & function code) from packet
-func (mp *ModbusPacket) GetPrefix() []byte {
-	if mp.TypeProtocol == ModbusRTUviaTCP || mp.TypeProtocol == ModbusTCP {
-		return mp.Data[mp.TypeProtocol.Offset():mp.TypeProtocol.Offset()+2]
-	}
-	return []byte{0x0}
-}
-
 // Get body Modbus request from packet
 func (mp *ModbusPacket) GetData() []byte {
 	if mp.Length == 0 {
