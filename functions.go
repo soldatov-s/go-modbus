@@ -7,7 +7,6 @@ package modbus
 import (
 	"encoding/binary"
 	"errors"
-	"fmt"
 )
 
 // Type of Modbus function
@@ -288,7 +287,6 @@ func ForceSingleCoilHndl(mp *ModbusPacket, md *ModbusData) (*ModbusPacket, error
 
 // Convert byte array to bool array
 func byteArrToBoolArr(data []byte, cnt uint16) []bool {
-	fmt.Println(data, cnt)
 	bool_data := make([]bool, 0, cnt)
 	j := uint16(0)
 	for _, value := range data {
@@ -313,7 +311,6 @@ func ForceMultipleCoilsHndl(mp *ModbusPacket, md *ModbusData) (*ModbusPacket, er
 	cnt_byte := mp.Data[6]
 
 	// Set values in ModbusData
-	fmt.Println(byteArrToBoolArr(mp.Data[7:7+cnt_byte], cnt))
 	err := md.ForceMultipleCoils(addr, byteArrToBoolArr(mp.Data[7:7+cnt_byte], cnt)...)
 	if err != nil {
 		return buildErrAnswer(mp, 2), err
