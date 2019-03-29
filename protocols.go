@@ -33,6 +33,14 @@ func (p ModbusTypeProtocol) MaxSize() int {
 	return names[p]
 }
 
+// PDU offest
+func (p ModbusTypeProtocol) Offset() int {
+	if name == "ModbusTCP" {
+		return 4
+	}
+	return 0
+}
+
 // Get the name of this protocol
 func (p ModbusTypeProtocol) String() string {
 	names := []string{
