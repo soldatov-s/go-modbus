@@ -42,7 +42,12 @@ func (mp *ModbusPacket) GetData() []byte {
 	if mp.Length == 0 {
 		return nil
 	}
-	return mp.Data[2 : mp.Length-2]
+	if mp.TypeProtocol == ModbusTCP {
+		return mp.Data[mp.TypeProtocol.Offset() + 2:]
+	}
+	if mp.TypeProtocol == ModbusRTUviaTCP {
+		return mp.Data[mp.TypeProtocol.Offset() + 2 : mp.Length-2]
+	}
 }
 
 // Get CRC field from packet
@@ -50,7 +55,7 @@ func (mp *ModbusPacket) GetCrc() uint16 {
 	if mp.Length == 0 || mp.TypeProtocol == ModbusTCP {
 		return 0
 	}
-	return binary.BigEndian.Uint16(mp.Data[mp.Length-2 : mp.Length])
+	return binary.BigEndian.Uint16(mp.Data[mp.Length-2 :])
 }
 
 // Recalculate and check CRC of packet
