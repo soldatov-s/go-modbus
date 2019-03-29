@@ -94,3 +94,26 @@ func TestModbusPacket_GetCrc(t *testing.T) {
 		t.Error("Expected", uint16(0x0), "got", res)
 	}
 }
+
+func TestModbusPacket_GetData(t *testing.T) {
+	test_data := []byte{0x1, 0x3, 0x0, 0x0, 0x0, 0xA, 0xCD, 0xC5}
+	mp := &ModbusPacket{TypeProtocol: ModbusRTUviaTCP,
+		Data:   test_data,
+		Length: len(test_data)}
+	res := mp.GetData()
+	for i, v := range test_data[2:len(test_data)-2] {
+		if res[i] != v {
+			t.Error("Expected", v, "got", res[i])
+		}
+	}
+	test_data = []byte{0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x1, 0x3, 0x0, 0x0, 0x0, 0xA}
+	mp = &ModbusPacket{TypeProtocol: ModbusTCP,
+		Data:   test_data,
+		Length: len(test_data)}
+	res = mp.GetData()
+	for i, v := range test_data[2:] {
+		if res[i] != v {
+			t.Error("Expected", v, "got", res[i])
+		}
+	}
+}
