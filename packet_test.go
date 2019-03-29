@@ -91,6 +91,6 @@ func TestModbusPacket_GetCrc(t *testing.T) {
 		Length: len(test_data)}
 	res := mp.GetFC()
 	if res != uint16(0x0) {
-		t.Error("Expected", uint16(0x0, "got", res)
+		t.Error("Expected", uint16(0x0), "got", res)
 	}
 }
