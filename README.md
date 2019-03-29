@@ -32,7 +32,7 @@ go get github.com/soldatov-s/go-modbus
 Next, build and run the examples:
 
  * [mb-server.go](mb-server/mb-server.go) for an Modbus RTU over TCP server example
- * [mb-client.go](mb-server/mb-client.go) for an Modbus RTU over TCP client example
+ * [mb-client.go](mb-client/mb-client.go) for an Modbus RTU over TCP client example
 
 ## Rest Server
  - /coils - Coils (GET and PUT)
