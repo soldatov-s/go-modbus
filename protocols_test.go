@@ -31,3 +31,39 @@ func TestStringToModbusTypeProtocol(t *testing.T) {
 		}
 	}
 }
+
+type testModbusTypeProtocolpair struct {
+	TypeProtocol   ModbusTypeProtocol
+	name string
+	maxSize int
+	offset int
+}
+
+var testsModbusTypeProtocol = []testModbusTypeProtocolpair{
+	{ModbusTCP, "ModbusTCP", 260},
+	{ModbusRTUviaTCP, "ModbusRTUviaTCP", 256},
+}
+
+func TestModbusTypeProtocol_String(t *testing.T) {
+	for _, pair := range testsModbusTypeProtocol {
+		if pair.TypeProtocol.String() != pair.name {
+			t.Error("Expected ", pair.name, "got ", pair.TypeProtocol.String())
+		}
+	}
+}
+
+func TestModbusTypeProtocol_MaxSize(t *testing.T) {
+	for _, pair := range testsModbusTypeProtocol {
+		if pair.TypeProtocol.MaxSize() != pair.maxSize {
+			t.Error("Expected ", pair.maxSize, "got ", pair.TypeProtocol.MaxSize())
+		}
+	}
+}
+
+func TestModbusTypeProtocol_Offset(t *testing.T) {
+	for _, pair := range testsModbusTypeProtocol {
+		if pair.TypeProtocol.Offset() != pair.offset {
+			t.Error("Expected ", pair.maxSize, "got ", pair.TypeProtocol.Offset())
+		}
+	}
+}
