@@ -6,7 +6,6 @@ package modbus
 
 import (
 	"encoding/binary"
-	"fmt"
 	"sync"
 	"testing"
 )
@@ -186,7 +185,6 @@ func TestReadDescreteInputsHndl(t *testing.T) {
 	md := &ModbusData{discrete_inputs: make([]bool, 10)}
 	md.ForceMultipleDescreteInputs(0, test_data...)
 	req := buildPacket(true, ModbusRTUviaTCP, 1, ReadDescreteInputs, 0, 0x5)
-	fmt.Println(req)
 	answ, _ := ReadDescreteInputsHndl(req, md)
 	cnt_byte := uint16(answ.Data[2])
 	bool_arr := byteArrToBoolArr(answ.Data[3:3+cnt_byte], uint16(len(test_data)))
