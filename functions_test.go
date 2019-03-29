@@ -200,7 +200,7 @@ func TestPresetSingleRegisterHndl(t *testing.T) {
 	test_addr := uint16(0x0)
 	md := &ModbusData{holding_reg: make([]uint16, 10), mu_holding_regs: &sync.Mutex{}}
 	req := buildPacket(true, ModbusRTUviaTCP, 1, PresetSingleRegister, test_addr, test_data)
-	PresetSingleRegister(req, md)
+	PresetSingleRegisterHndl(req, md)
 	if md.holding_reg[test_addr] != test_data {
 		t.Error("Expected ", test_data, "got ", md.holding_reg[test_addr])
 	}
@@ -211,7 +211,7 @@ func TestForceSingleCoilHndl(t *testing.T) {
 	test_addr := uint16(0xFF00)
 	md := &ModbusData{coils: make([]bool, 10), mu_coils: &sync.Mutex{}}
 	req := buildPacket(true, ModbusRTUviaTCP, 1, ForceSingleCoil, test_addr, test_data)
-	PresetSingleRegister(req, md)
+	ForceSingleCoilHndl(req, md)
 	if md.coils[test_addr] != true {
 		t.Error("Expected ", true, "got ", md.coils[test_addr])
 	}
