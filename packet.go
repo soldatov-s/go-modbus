@@ -24,26 +24,12 @@ func (mp *ModbusPacket) Init() {
 
 // Get device address field from packet
 func (mp *ModbusPacket) GetAddr() byte {
-	switch mp.TypeProtocol {
-	case ModbusRTUviaTCP:
-		return mp.Data[0]
-	case ModbusTCP:
-		return mp.Data[5]
-	default:
-		return 0
-	}
+	return mp.Data[mp.TypeProtocol.Offset()]
 }
 
 // Get function code field from packet
 func (mp *ModbusPacket) GetFC() ModbusFunctionCode {
-	switch mp.TypeProtocol {
-	case ModbusRTUviaTCP:
-		return ModbusFunctionCode(mp.Data[1])
-	case ModbusTCP:
-		return ModbusFunctionCode(mp.Data[6])
-	default:
-		return 0
-	}
+	return ModbusFunctionCode(mp.Data[1+mp.TypeProtocol.Offset()])
 }
 
 // Handler request by function code
@@ -53,14 +39,10 @@ func (mp *ModbusPacket) HandlerRequest(md *ModbusData) (*ModbusPacket, error) {
 
 // Get prefix (device address & function code) from packet
 func (mp *ModbusPacket) GetPrefix() []byte {
-	switch mp.TypeProtocol {
-	case ModbusRTUviaTCP:
-		return mp.Data[0:2]
-	case ModbusTCP:
-		return mp.Data[5:7]
-	default:
-		return []byte{0x0}
+	if mp.TypeProtocol == ModbusRTUviaTCP || mp.TypeProtocol == ModbusTCP {
+		return mp.Data[mp.TypeProtocol.Offset():mp.TypeProtocol.Offset()+2]
 	}
+	return []byte{0x0}
 }
 
 // Get body Modbus request from packet
