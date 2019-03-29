@@ -33,9 +33,9 @@ func TestwordArrToByteArr(t *testing.T) {
 	test_data := []uint16{0x01, 0x02, 0x03, 0x04}
 	res := wordArrToByteArr(test_data)
 	for i, v := range test_data {
-		t := binary.BigEndian.Uint16(res[2*i : 2+2*i])
-		if v != t {
-			t.Error("Expected ", int(v), "got ", int(t))
+		r := binary.BigEndian.Uint16(res[2*i : 2+2*i])
+		if v != r {
+			t.Error("Expected ", v, "got ", r)
 		}
 	}
 }
@@ -47,7 +47,7 @@ func TestbyteArrToBoolArr(t *testing.T) {
 	res := byteArrToBoolArr(test_data, test_cnt)
 	for i, v := range target {
 		if v != res[i] {
-			t.Error("Expected ", int(v), "got ", res[i])
+			t.Error("Expected ", v, "got ", res[i])
 		}
 	}
 }
@@ -56,9 +56,9 @@ func TestbyteArrToWordArr(t *testing.T) {
 	test_data := []byte{0x0, 0x01, 0x0, 0x02, 0x0, 0x03, 0x0, 0x04}
 	res := byteArrToWordArr(test_data)
 	for i, v := range res {
-		t := binary.BigEndian.Uint16(test_data[2*i : 2+2*i])
-		if v != t {
-			t.Error("Expected ", int(t), "got ", v)
+		r := binary.BigEndian.Uint16(test_data[2*i : 2+2*i])
+		if v != r {
+			t.Error("Expected ", r, "got ", v)
 		}
 	}
 }
