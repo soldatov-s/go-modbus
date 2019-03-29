@@ -293,7 +293,7 @@ func byteArrToBoolArr(data []byte, cnt uint16) []bool {
 	j := uint16(0)
 	for _, value := range data {
 		for k := uint(0); k < 8; k++ {
-			bool_data = append(bool_data, bool(value&byte(1<<k) == 1))
+			bool_data = append(bool_data, bool(value&byte(1<<k) != 0))
 			if j == cnt {
 				break
 			}
