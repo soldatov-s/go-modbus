@@ -76,7 +76,7 @@ func (mp *ModbusPacket) ModbusDump(msg ...string) {
 	fmt.Printf("Slave addr: \t\t\t%x\n", mp.GetAddr())
 	fmt.Printf("Code function: \t\t\t%s(0x%x)\n", mp.GetFC(), byte(mp.GetFC()))
 	fmt.Println("Packet data:")
-	fmt.Println(hex.Dump(mp.GetData()))
+	fmt.Println(hex.Dump(mp.GetData(0, mp.Length)))
 	bs := make([]byte, 2)
 	binary.LittleEndian.PutUint16(bs, mp.GetCrc())
 	fmt.Printf("Modbus CRC16: \t\t\t%x %x\n\n", bs[0], bs[1])
