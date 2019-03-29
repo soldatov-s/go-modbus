@@ -11,10 +11,11 @@ Modbus protocol framework
 ## Supported
  1. Modbus RTU over TCP
  2. Modbus Slave mode (Modbus Server)
- 3. Rest server for read/write Modbus Data
- 4. gRPC service
- 5. Dump Modbus packets
- 6. Function:  
+ 3. Modbus Master mode (Modbus Client)
+ 4. Rest server for read/write Modbus Data
+ 5. gRPC service (Server/Client)
+ 6. Dump Modbus packets
+ 7. Function:  
  - Read Coil Status (0x1)
  - Read Discrete Inputs (0x2)
  - Read Holding Registers (0x3)
@@ -31,6 +32,7 @@ go get github.com/soldatov-s/go-modbus
 Next, build and run the examples:
 
  * [mb-server.go](mb-server/mb-server.go) for an Modbus RTU over TCP server example
+ * [mb-client.go](mb-server/mb-client.go) for an Modbus RTU over TCP client example
 
 ## Rest Server
  - /coils - Coils (GET and PUT)
@@ -54,5 +56,5 @@ curl -X POST -i http://localhost:8000/hold_reg --data '{
 ## More Documentation
 
 More documentation about Modbus is available on the
-- [Wiki](https://en.wikipedia.org/wiki/Modbus).
+- [Wiki](https://en.wikipedia.org/wiki/Modbus)
 - [Modbus Technical Specifications](http://www.modbus.org/specs.php)
