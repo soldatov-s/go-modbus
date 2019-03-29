@@ -48,7 +48,7 @@ func (mp *ModbusPacket) GetData(val ...int) []byte {
 	}
 	if len(val) == 2 {
 		end := val[1]
-		return mp.Data[mp.TypeProtocol.Offset() + start : end]	
+		return mp.Data[mp.TypeProtocol.Offset() + start : mp.TypeProtocol.Offset() + end]	
 	}
 	return nil
 }
