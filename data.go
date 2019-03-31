@@ -5,19 +5,8 @@
 package modbus
 
 import (
-	"errors"
 	"fmt"
 	"sync"
-)
-
-type ModbusDataType int
-
-// Data types enumeration
-const (
-	Coils ModbusDataType = iota
-	DiscreteInputs
-	HoldingRegisters
-	InputRegisters
 )
 
 // ModbusData implements data interface
@@ -28,23 +17,9 @@ type ModbusData struct {
 }
 
 // Checks that requested data is not outside the present range
-func (md *ModbusData) isNotOutside(dataType ModbusDataType, addr, cnt uint16) (bool, error) {
-	var err error
-	l := 0
-	switch dataType {
-	case HoldingRegisters:
-		l = len(md.holding_reg)
-	case DiscreteInputs:
-		l = len(md.discrete_inputs)
-	case InputRegisters:
-		l = len(md.input_reg)
-	case Coils:
-		l = len(md.coils)
-	}
-
-	if addr+cnt > uint16(l) {
-		err_str := fmt.Sprintf("Requested data %d...%d outside the valid range 0...%d", addr, addr+cnt, l)
-		err = errors.New(err_str)
+func (md *ModbusData) isNotOutside(addr, cnt uint16, datasize int) (bool, error) {
+	if addr+cnt > uint16(datasize) {
+		err := fmt.Errorf("Requested data %d...%d outside the valid range 0...%d", addr, addr+cnt, datasize)
 		return false, err
 	}
 
@@ -71,7 +46,7 @@ func (md *ModbusData) PresetSingleRegister(addr uint16, data uint16) error {
 // Set Preset Multiple Registers
 func (md *ModbusData) PresetMultipleRegisters(addr uint16, data ...uint16) error {
 	cnt := uint16(len(data))
-	_, err := md.isNotOutside(HoldingRegisters, addr, cnt)
+	_, err := md.isNotOutside(addr, cnt, len(md.holding_reg))
 	if err == nil {
 		md.mu_holding_regs.Lock()
 		defer md.mu_holding_regs.Unlock()
@@ -83,7 +58,7 @@ func (md *ModbusData) PresetMultipleRegisters(addr uint16, data ...uint16) error
 // Set Preset Multiple Input Registers, for tests
 func (md *ModbusData) PresetMultipleInputsRegisters(addr uint16, data ...uint16) error {
 	cnt := uint16(len(data))
-	_, err := md.isNotOutside(InputRegisters, addr, cnt)
+	_, err := md.isNotOutside(addr, cnt, len(md.input_reg))
 	if err == nil {
 		copy(md.input_reg[addr:addr+cnt], data)
 	}
@@ -92,7 +67,7 @@ func (md *ModbusData) PresetMultipleInputsRegisters(addr uint16, data ...uint16)
 
 // Read Holding Registers
 func (md *ModbusData) ReadHoldingRegisters(addr, cnt uint16) ([]uint16, error) {
-	_, err := md.isNotOutside(HoldingRegisters, addr, cnt)
+	_, err := md.isNotOutside(addr, cnt, len(md.holding_reg))
 	if err != nil {
 		return nil, err
 	}
@@ -101,7 +76,7 @@ func (md *ModbusData) ReadHoldingRegisters(addr, cnt uint16) ([]uint16, error) {
 
 // Read Input Registers
 func (md *ModbusData) ReadInputRegisters(addr, cnt uint16) ([]uint16, error) {
-	_, err := md.isNotOutside(InputRegisters, addr, cnt)
+	_, err := md.isNotOutside(addr, cnt, len(md.input_reg))
 	if err != nil {
 		return nil, err
 	}
@@ -110,7 +85,7 @@ func (md *ModbusData) ReadInputRegisters(addr, cnt uint16) ([]uint16, error) {
 
 // Read Coil Status
 func (md *ModbusData) ReadCoilStatus(addr, cnt uint16) ([]bool, error) {
-	_, err := md.isNotOutside(Coils, addr, cnt)
+	_, err := md.isNotOutside(addr, cnt, len(md.coils))
 	if err != nil {
 		return nil, err
 	}
@@ -125,7 +100,7 @@ func (md *ModbusData) ForceSingleCoil(addr uint16, data bool) error {
 // Force Multiple Coils
 func (md *ModbusData) ForceMultipleCoils(addr uint16, data ...bool) error {
 	cnt := uint16(len(data))
-	_, err := md.isNotOutside(Coils, addr, cnt)
+	_, err := md.isNotOutside(addr, cnt, len(md.coils))
 	if err == nil {
 		md.mu_coils.Lock()
 		defer md.mu_coils.Unlock()
@@ -137,7 +112,7 @@ func (md *ModbusData) ForceMultipleCoils(addr uint16, data ...bool) error {
 // Force Multiple Descrete Inputs, for tests
 func (md *ModbusData) ForceMultipleDescreteInputs(addr uint16, data ...bool) error {
 	cnt := uint16(len(data))
-	_, err := md.isNotOutside(DiscreteInputs, addr, cnt)
+	_, err := md.isNotOutside(addr, cnt, len(md.discrete_inputs))
 	if err == nil {
 		copy(md.discrete_inputs[addr:addr+cnt], data)
 	}
@@ -146,7 +121,7 @@ func (md *ModbusData) ForceMultipleDescreteInputs(addr uint16, data ...bool) err
 
 // Read Descrete Inputs
 func (md *ModbusData) ReadDescreteInputs(addr, cnt uint16) ([]bool, error) {
-	_, err := md.isNotOutside(DiscreteInputs, addr, cnt)
+	_, err := md.isNotOutside(addr, cnt, len(md.discrete_inputs))
 	if err != nil {
 		return nil, err
 	}

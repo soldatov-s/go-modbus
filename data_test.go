@@ -10,15 +10,15 @@ import (
 )
 
 type testcheckOutsidepair struct {
-	dataType  ModbusDataType
 	addr, cnt uint16
+	datasize  int
 	res       bool
 }
 
 var testscheckOutside = []testcheckOutsidepair{
-	{HoldingRegisters, 0, 2, true},
-	{DiscreteInputs, 0, 3, true},
-	{InputRegisters, 0, 4, false},
+	{0, 2, 100, true},
+	{0, 3, 200, true},
+	{0, 4, 3, false},
 }
 
 func TestModbusData_checkOutside(t *testing.T) {
@@ -28,10 +28,10 @@ func TestModbusData_checkOutside(t *testing.T) {
 		holding_reg:     []uint16{0, 0, 0},
 		input_reg:       []uint16{0, 0, 0}}
 	for _, pair := range testscheckOutside {
-		res, _ := md.isNotOutside(pair.dataType, pair.addr, pair.cnt)
+		res, _ := md.isNotOutside(pair.addr, pair.cnt, pair.datasize)
 		if res != pair.res {
 			t.Error(
-				"For ModbusDataType", pair.dataType, "addr=", pair.addr, "cnt=", pair.cnt,
+				"For datasize", pair.datasize, "addr=", pair.addr, "cnt=", pair.cnt,
 				"expected", pair.res,
 				"got", res,
 			)

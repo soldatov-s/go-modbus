@@ -7,6 +7,7 @@
 package modbus
 
 import (
+	"errors"
 	"log"
 	"math"
 	"net"
@@ -18,7 +19,7 @@ import (
 // ModbusServer implements server interface
 type ModbusServer struct {
 	ModbusBaseServer                    // Anonim ModbusBase implementation
-	MTP              ModbusTypeProtocol // Type of Modbus protocol: TCP or RTU over TCP
+	TypeProtocol     ModbusTypeProtocol // Type of Modbus protocol: TCP or RTU over TCP
 	ln               net.Listener       // Listener
 	done             chan struct{}      // Chan for sending "done" command
 	exited           chan struct{}      // Chan for sending to main app signal that server is fully stopped
@@ -28,9 +29,9 @@ type ModbusServer struct {
 // NewServer function initializate new instance of ModbusServer
 func NewServer(host, port string, mbprotocol ModbusTypeProtocol, md *ModbusData) *ModbusServer {
 	srv := &ModbusServer{
-		MTP:    mbprotocol,
-		done:   make(chan struct{}),
-		exited: make(chan struct{})}
+		TypeProtocol: mbprotocol,
+		done:         make(chan struct{}),
+		exited:       make(chan struct{})}
 	srv.Port = port
 	srv.Host = host
 	srv.Data = md
@@ -98,13 +99,16 @@ func (srv *ModbusServer) handleRequest(conn net.Conn) error {
 	var (
 		id_packet int
 		err       error
-		request   *ModbusPacket = &ModbusPacket{
-			TypeProtocol: srv.MTP}
 	)
 	// Close the connection when you're done with it.
-	defer conn.Close()
+	defer func() {
+		log.Println("Close connection", conn.RemoteAddr())
+		srv.wg.Done()
+		conn.Close()
+	}()
 	srv.wg.Add(1)
-	request.Init()
+	request := &ModbusPacket{}
+	request.Init(srv.TypeProtocol)
 
 	log.Printf(
 		"Src->: %s Dst<-: %s\n",
@@ -116,14 +120,12 @@ func (srv *ModbusServer) handleRequest(conn net.Conn) error {
 		conn.SetReadDeadline(time.Now().Add(5 * time.Second))
 		select {
 		case <-srv.done:
-			log.Println("Close connection", conn.RemoteAddr())
-			srv.wg.Done()
 			return nil
 		default:
-			request.Length, err = conn.Read(request.Data)
+			request.Length, err = conn.Read(request.PDU)
 			if err != nil {
 				log.Println("Error reading:", err.Error())
-				break
+				return err
 			}
 
 			if request.Length == 0 {
@@ -134,16 +136,132 @@ func (srv *ModbusServer) handleRequest(conn net.Conn) error {
 				id_packet = 0
 			}
 			log.Printf("Src->: %s, Packet ID:%d\n", conn.RemoteAddr(), id_packet)
-			request.ModbusDump("****Request Dump****")
+			request.Dump("****Request Dump****")
 			var answer *ModbusPacket
-			answer, err = request.HandlerRequest(srv.Data)
+			answer, err = srv.RequestHadler(request)
 			if err != nil {
 				log.Println("Error handle request:", err.Error())
 				break
 			}
-			answer.ModbusDump("****Answer Dump****")
-			conn.Write(answer.Data)
+			answer.Dump("****Answer Dump****")
+			conn.Write(answer.PDU[:answer.GetPDULength()])
 		}
 	}
 	return err
+}
+
+func (srv *ModbusServer) RequestHadler(mp *ModbusPacket) (*ModbusPacket, error) {
+	switch mp.GetFunctionCode() {
+	case FcReadCoilStatus:
+		return srv.ReadCoilStatus(mp)
+	case FcReadDescreteInputs:
+		return srv.ReadDescreteInputs(mp)
+	case FcForceSingleCoil:
+		return srv.ForceSingleCoil(mp)
+	case FcPresetSingleRegister:
+		return srv.PresetSingleRegister(mp)
+	case FcReadHoldingRegisters:
+		return srv.ReadHoldingRegisters(mp)
+	case FcReadInputRegisters:
+		return srv.ReadInputRegisters(mp)
+	case FcForceMultipleCoils:
+		return srv.ForceMultipleCoils(mp)
+	case FcPresetMultipleRegisters:
+		return srv.PresetMultipleRegisters(mp)
+	default:
+		return buildErrAnswer(mp, ErrCantHandel), errors.New("Unknown function code")
+	}
+}
+
+// Read Holding registers
+func (srv *ModbusServer) ReadHoldingRegisters(mp *ModbusPacket) (*ModbusPacket, error) {
+	addr, cnt := mp.GetFunctionParameters()
+	// Try get data for answer
+	data, err := srv.Data.ReadHoldingRegisters(addr, cnt)
+	if err != nil {
+		return buildErrAnswer(mp, 2), err
+	}
+	return buildAnswer(mp, wordArrToByteArr(data)...), nil
+}
+
+// Read Inputs registers
+func (srv *ModbusServer) ReadInputRegisters(mp *ModbusPacket) (*ModbusPacket, error) {
+	addr, cnt := mp.GetFunctionParameters()
+	// Try get data for answer
+	data, err := srv.Data.ReadInputRegisters(addr, cnt)
+	if err != nil {
+		return buildErrAnswer(mp, 2), err
+	}
+	return buildAnswer(mp, wordArrToByteArr(data)...), nil
+}
+
+// Preset Single Register
+func (srv *ModbusServer) PresetSingleRegister(mp *ModbusPacket) (*ModbusPacket, error) {
+	addr, value := mp.GetFunctionParameters()
+	// Set values in ModbusData
+	err := srv.Data.PresetSingleRegister(addr, value)
+	if err != nil {
+		return buildErrAnswer(mp, 2), err
+	}
+	return buildAnswer(mp), nil
+}
+
+// Preset Multiple Holding Registers
+func (srv *ModbusServer) PresetMultipleRegisters(mp *ModbusPacket) (*ModbusPacket, error) {
+	addr, _ := mp.GetFunctionParameters()
+	_, data := mp.GetData()
+	// Set values in ModbusData
+	err := srv.Data.PresetMultipleRegisters(addr, byteArrToWordArr(data)...)
+	if err != nil {
+		return buildErrAnswer(mp, 2), err
+	}
+	return buildAnswer(mp), nil
+}
+
+// Read Coil Status
+func (srv *ModbusServer) ReadCoilStatus(mp *ModbusPacket) (*ModbusPacket, error) {
+	addr, cnt := mp.GetFunctionParameters()
+	// Data for answer
+	data, err := srv.Data.ReadCoilStatus(addr, cnt)
+	if err != nil {
+		return buildErrAnswer(mp, 2), err
+	}
+	return buildAnswer(mp, boolArrToByteArr(data)...), nil
+}
+
+// Read Descrete Inputs
+func (srv *ModbusServer) ReadDescreteInputs(mp *ModbusPacket) (*ModbusPacket, error) {
+	addr, cnt := mp.GetFunctionParameters()
+	// Data for answer
+	data, err := srv.Data.ReadDescreteInputs(addr, cnt)
+	if err != nil {
+		return buildErrAnswer(mp, 2), err
+	}
+	return buildAnswer(mp, boolArrToByteArr(data)...), nil
+}
+
+// Force Single Coil
+func (srv *ModbusServer) ForceSingleCoil(mp *ModbusPacket) (*ModbusPacket, error) {
+	addr, value := mp.GetFunctionParameters()
+	if value == 0xFF00 {
+		value = 1
+	}
+	// Set values in ModbusData
+	err := srv.Data.ForceSingleCoil(addr, bool((value&1) == 1))
+	if err != nil {
+		return buildErrAnswer(mp, 2), err
+	}
+	return buildAnswer(mp), nil
+}
+
+// Force Multiple Coils
+func (srv *ModbusServer) ForceMultipleCoils(mp *ModbusPacket) (*ModbusPacket, error) {
+	addr, cnt := mp.GetFunctionParameters()
+	_, data := mp.GetData()
+	// Set values in ModbusData)
+	err := srv.Data.ForceMultipleCoils(addr, byteArrToBoolArr(data, byte(cnt))...)
+	if err != nil {
+		return buildErrAnswer(mp, 2), err
+	}
+	return buildAnswer(mp), nil
 }

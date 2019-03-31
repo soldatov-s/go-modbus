@@ -14,22 +14,19 @@ var (
 	port       = flag.String("port", "502", "port number")
 	host       = flag.String("host", "localhost", "hostname or host ip")
 	mbprotocol = flag.String("mbprotocol", "ModbusRTUviaTCP", "type of modbus protocol: ModbusTCP or ModbusRTUviaTCP")
-
-	fcode      = flag.String("fcode", "0x03", "function code")
-	slave_addr = flag.String("slave", "1", "slave address")
-	data       = flag.String("data", "0000000A", "data for send")
 )
 
 func main() {
 	var (
-		err    error
-		cl     *modbus.ModbusClient
-		answer *modbus.ModbusPacket
+		err       error
+		cl        *modbus.ModbusClient
+		hold_regs []uint16
+		coils     []bool
 	)
 	fmt.Println("Modbus client app!")
 	flag.Parse()
 
-	cl, err = modbus.NewClient(*host, *port,
+	cl, err = modbus.NewClient(*port, *host,
 		modbus.StringToModbusTypeProtocol(*mbprotocol), 1)
 
 	if err != nil {
@@ -37,20 +34,21 @@ func main() {
 		os.Exit(1)
 	}
 
-	request := &modbus.ModbusPacket{
-		Data:         []byte{0x1, 0x3, 0x0, 0x0, 0x0, 0xA, 0xCD, 0xC5},
-		Length:       8,
-		TypeProtocol: cl.TypeProtocol}
-
-	request.ModbusDump()
-
-	answer, err = cl.SendRequest(request)
+	hold_regs, err = cl.ReadHoldingRegisters(0, 10)
 	if err != nil {
 		fmt.Println(err)
 		os.Exit(1)
 	}
 
-	answer.ModbusDump()
+	fmt.Println("Result ", hold_regs)
+
+	coils, err = cl.ReadCoilStatus(0, 10)
+	if err != nil {
+		fmt.Println(err)
+		os.Exit(1)
+	}
+
+	fmt.Println("Result ", coils)
 
 	cl.Close()
 }

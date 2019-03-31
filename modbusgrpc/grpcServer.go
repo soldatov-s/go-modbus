@@ -5,7 +5,7 @@
 package modbusgrpc
 
 import (
-	"log"
+	"fmt"
 	"net"
 
 	"google.golang.org/grpc"
@@ -110,12 +110,12 @@ func NewgRPCService(host, port string, md *ModbusData) *ModbusService {
 }
 
 // Start gRPC server
-func (srv *ModbusService) Start() {
+func (srv *ModbusService) Start() error {
 	var err error
 	// Start gRPC server
 	srv.ln, err = net.Listen("tcp", srv.String())
 	if err != nil {
-		log.Fatalf("failed to listen: %v", err)
+		return fmt.Errorf("failed to listen: %v", err)
 	}
 	s := grpc.NewServer()
 
@@ -124,6 +124,12 @@ func (srv *ModbusService) Start() {
 	// Register answer service at gRPC server
 	reflection.Register(s)
 	if err := s.Serve(srv.ln); err != nil {
-		log.Fatalf("failed to serve: %v", err)
+		return fmt.Errorf("failed to serve: %v", err)
 	}
+	return nil
+}
+
+func (srv *ModbusService) Stop() error {
+	// TODO: Make later
+	return nil
 }

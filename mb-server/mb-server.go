@@ -18,6 +18,8 @@ var (
 	host                = flag.String("host", "localhost", "hostname or host ip")
 	rest_port           = flag.String("rest_port", "8000", "port number")
 	rest_host           = flag.String("rest_host", "localhost", "hostname or host ip")
+	grpc_port           = flag.String("grpc_port", "4242", "port number")
+	grpc_host           = flag.String("grpc_host", "localhost", "hostname or host ip")
 	mbprotocol          = flag.String("mbprotocol", "ModbusRTUviaTCP", "type of modbus protocol: ModbusTCP or ModbusRTUviaTCP")
 	coils_cnt           = flag.Int("coils_cnt", 65535, "coils counter")
 	discrete_inputs_cnt = flag.Int("discrete_inputs_cnt", 65535, "discrete inputs counter")
@@ -34,13 +36,17 @@ func main() {
 	md := new(modbus.ModbusData)
 	md.Init(*coils_cnt, *discrete_inputs_cnt, *holding_reg_cnt, *input_reg_cnt)
 	md.PresetMultipleRegisters(0, []uint16{0x01, 0x02, 0x03, 0x04, 0x05}...)
+	md.ForceMultipleCoils(0, []bool{true, false, false, true, true}...)
 
 	srv := modbus.NewServer(*host, *port,
 		modbus.StringToModbusTypeProtocol(*mbprotocol), md)
 
 	rest := modbusrest.NewRest(*rest_host, *rest_port, md)
 
-	servers := [2]modbus.IModbusBaseServer{srv, rest}
+	// TODO: make later
+	//gRPC := modbusgrpc.NewgRPCService(*grpc_host, *grpc_port, md)
+
+	servers := []modbus.IModbusBaseServer{srv, rest}
 	// Exit handler
 	exit := make(chan struct{})
 	closeSignal := make(chan os.Signal)
