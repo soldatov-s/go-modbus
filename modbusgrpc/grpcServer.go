@@ -6,6 +6,7 @@ package modbusgrpc
 
 import (
 	"fmt"
+	"log"
 	"net"
 
 	"google.golang.org/grpc"
@@ -19,7 +20,8 @@ import (
 // ModbusService is service for gRPC
 type ModbusService struct {
 	ModbusBaseServer
-	ln net.Listener // Listener
+	ln   net.Listener // Listener
+	gRPC *grpc.Server
 }
 
 func uint16ArrToInt32Arr(data []uint16) []int32 {
@@ -113,23 +115,31 @@ func NewgRPCService(host, port string, md *ModbusData) *ModbusService {
 func (srv *ModbusService) Start() error {
 	var err error
 	// Start gRPC server
+	log.Println("gRPC-Server startup...")
+	log.Println("Listening at", srv.String())
+
 	srv.ln, err = net.Listen("tcp", srv.String())
 	if err != nil {
 		return fmt.Errorf("failed to listen: %v", err)
 	}
-	s := grpc.NewServer()
+	srv.gRPC = grpc.NewServer()
 
-	RegisterModbusServiceServer(s, srv)
+	RegisterModbusServiceServer(srv.gRPC, srv)
 
 	// Register answer service at gRPC server
-	reflection.Register(s)
-	if err := s.Serve(srv.ln); err != nil {
-		return fmt.Errorf("failed to serve: %v", err)
-	}
+	reflection.Register(srv.gRPC)
+	go func() {
+		if err := srv.gRPC.Serve(srv.ln); err != nil {
+			log.Fatalf("failed to serve: %v", err)
+		}
+	}()
+
+	log.Println("gRPC-server started")
 	return nil
 }
 
 func (srv *ModbusService) Stop() error {
-	// TODO: Make later
+	srv.gRPC.GracefulStop()
+	log.Println("gRPC-server is stopped")
 	return nil
 }
